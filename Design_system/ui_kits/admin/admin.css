@@ -6,7 +6,7 @@ html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background:
 /* ─── Shell ────────────────────────────────────────── */
 .sshell { display: flex; height: 100vh; }
 .sshell__main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface-card); }
-.sshell__work { flex: 1; overflow: auto; padding: 14px 18px 20px; background: var(--surface-card); }
+.sshell__work { flex: 1; overflow: auto; padding: 14px 18px 20px; background: #dce5ee; }
 
 /* ─── Sidebar ──────────────────────────────────────── */
 .ssidebar {
@@ -31,6 +31,21 @@ html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background:
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--stroke-medium) transparent;
+}
+.ssidebar__nav::-webkit-scrollbar {
+  width: 4px;
+}
+.ssidebar__nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ssidebar__nav::-webkit-scrollbar-thumb {
+  background: var(--stroke-medium);
+  border-radius: 4px;
+}
+.ssidebar__nav::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-secondary);
 }
 .smod {
   position: relative;
@@ -50,36 +65,10 @@ html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background:
   transition: background 120ms var(--ease-out);
 }
 .smod:last-child { border-bottom: 0; }
-.smod img { width: 38px; height: 38px; object-fit: contain; }
+.smod img { width: 28px; height: 28px; object-fit: contain; }
 .smod__label { text-align: center; color: var(--fg-base); }
 .smod:hover { background: var(--surface-highlight); }
 .smod--active { background: var(--surface-pink); }
-
-/* Sticker / dog-eared paper-tab in the top-right corner */
-.smod__sticker {
-  position: absolute;
-  top: -1px;
-  right: 8px;
-  width: 14px;
-  height: 10px;
-  background: var(--surface-muted);
-  border: 1px solid var(--stroke-base);
-  border-top: 0;
-  border-radius: 0 0 3px 3px;
-  pointer-events: none;
-}
-.smod__sticker::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 2px;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 1px;
-  background: var(--stroke-medium);
-  border-radius: 1px;
-  box-shadow: 0 3px 0 var(--stroke-medium);
-}
 
 /* ─── Top nav ──────────────────────────────────────── */
 .stopnav {

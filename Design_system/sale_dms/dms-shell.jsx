@@ -31,7 +31,6 @@ function DmsSidebar() {
       <nav className="ssidebar__nav">
         {items.map((m) => (
           <button key={m.id} className={"smod " + (m.active ? "smod--active" : "")} title={m.label}>
-            <span className="smod__sticker" />
             <img src={m.icon} alt="" />
             <span className="smod__label">{m.label}</span>
           </button>

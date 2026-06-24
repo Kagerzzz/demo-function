@@ -29,8 +29,6 @@ function Sidebar({ active, onSelect }) {
             onClick={() => onSelect(m.id)}
             title={m.label}
           >
-            {/* sticker-corner detail: a folded paper tab in the top-right */}
-            <span className="smod__sticker" />
             <img src={m.icon} alt="" />
             <span className="smod__label">{m.label}</span>
           </button>

@@ -2359,9 +2359,7 @@ function LocalSidebar({
     className: "smod " + (m.id === active ? "smod--active" : ""),
     onClick: () => onSelect(m.id),
     title: m.label
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "smod__sticker"
-  }), /*#__PURE__*/React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: m.icon,
     alt: ""
   }), /*#__PURE__*/React.createElement("span", {
@@ -3245,9 +3243,7 @@ function DmsSidebar() {
     key: m.id,
     className: "smod " + (m.active ? "smod--active" : ""),
     title: m.label
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "smod__sticker"
-  }), /*#__PURE__*/React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: m.icon,
     alt: ""
   }), /*#__PURE__*/React.createElement("span", {
@@ -8386,9 +8382,7 @@ function Sidebar({
     className: "smod " + (m.id === active ? "smod--active" : ""),
     onClick: () => onSelect(m.id),
     title: m.label
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "smod__sticker"
-  }), /*#__PURE__*/React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: m.icon,
     alt: ""
   }), /*#__PURE__*/React.createElement("span", {

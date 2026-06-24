@@ -34,7 +34,6 @@ function LocalSidebar({ active, onSelect }) {
             onClick={() => onSelect(m.id)}
             title={m.label}
           >
-            <span className="smod__sticker" />
             <img src={m.icon} alt="" />
             <span className="smod__label">{m.label}</span>
           </button>
