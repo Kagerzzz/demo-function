@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Top navigation" subtitle="50 px topbar pattern" viewport="700x130" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Top nav</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: var(--surface-canvas); }
+  .nav { height: 50px; background: #fff; border: 1px solid var(--stroke-base); display: flex; align-items: center; padding: 0 16px; gap: 18px; }
+  .hamb { color: var(--fg-base); cursor: pointer; }
+  .spacer { flex: 1; }
+  .item { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--fg-base); position: relative; padding: 0 14px; height: 100%; line-height: 50px; cursor: pointer; }
+  .item + .item { border-left: 1px solid var(--stroke-medium); }
+  .item .badge-count { position: absolute; top: 6px; left: 18px; }
+  .branch { color: var(--brand-pink); }
+  .profile { display: inline-flex; align-items: center; gap: 8px; padding-left: 16px; }
+  .profile .av { width: 32px; height: 32px; border-radius: 50%; background: url(../assets/avatars/avatar-04.jpg) center/cover; }
+  .profile .meta { line-height: 1.15; }
+  .profile .n { font-size: 13px; font-weight: 600; }
+  .profile .r { font-size: 11px; color: var(--fg-secondary); }
+  i.ph { font-size: 16px; }
+</style></head>
+<body>
+  <div class="nav">
+    <i class="ph ph-list hamb" style="font-size:20px"></i>
+    <span class="spacer"></span>
+    <span class="item"><i class="ph ph-bell"></i>Thông báo hệ thống<span class="badge-count">4</span></span>
+    <span class="item"><i class="ph ph-globe"></i>Website đặt chỗ</span>
+    <span class="item branch"><i class="ph ph-storefront"></i>Chi nhánh Cầu Giấy<i class="ph ph-caret-down"></i></span>
+    <span class="item profile">
+      <i class="ph ph-bell"></i><span class="badge-count" style="top:6px;left:18px">4</span>
+      <i class="ph ph-rocket-launch"></i>
+      <span class="av"></span>
+      <span class="meta"><div class="n">Nguyễn Văn An</div><div class="r">Admin đơn vị</div></span>
+    </span>
+  </div>
+</body></html>

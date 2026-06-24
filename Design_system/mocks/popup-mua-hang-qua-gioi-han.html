@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Popup — cảnh báo mua hàng quá giới hạn tồn kho" subtitle="Warning modal with product table + Đóng / Tiếp tục mua" viewport="1100x560" -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440, initial-scale=1" />
+  <title>Cảnh báo mua hàng quá giới hạn tồn kho — SandboxVN</title>
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <link rel="stylesheet" href="../ui_kits/admin/admin.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    html, body { background: rgba(58, 58, 76, 0.55); margin: 0; height: 100vh; overflow: hidden; }
+    .stage {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+
+    /* ─── Popup ─────────────────────────────────────────── */
+    .wpop {
+      width: 760px;
+      max-width: 92vw;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--shadow-modal);
+      display: flex; flex-direction: column;
+      max-height: 88vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .wpop__head {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 20px 24px 18px;
+      border-bottom: 1px solid var(--stroke-base);
+    }
+    .wpop__icon {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: var(--color-yellow-bg);
+      color: var(--color-yellow);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .wpop__icon i.ph { font-size: 22px; }
+    .wpop__title {
+      flex: 1;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--fg-base);
+      letter-spacing: 0.005em;
+      padding-top: 4px;
+    }
+    .wpop__sub {
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--fg-secondary);
+      line-height: 1.45;
+    }
+    .wpop__x {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border: 0; background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--fg-secondary);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .wpop__x:hover { background: var(--surface-highlight); color: var(--fg-base); }
+    .wpop__x i.ph { font-size: 18px; }
+
+    /* Body */
+    .wpop__body { padding: 16px 24px 20px; overflow: auto; }
+
+    /* Table */
+    .wptbl { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .wptbl thead th {
+      background: var(--surface-table-header);
+      font-size: 12px; font-weight: 600;
+      color: var(--fg-base);
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--stroke-base);
+      letter-spacing: 0.005em;
+    }
+    .wptbl thead th:first-child { border-top-left-radius: 6px; }
+    .wptbl thead th:last-child { border-top-right-radius: 6px; }
+    .wptbl tbody td {
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--fg-base);
+      border-bottom: 1px solid var(--stroke-base);
+      letter-spacing: 0.005em;
+      vertical-align: middle;
+    }
+    .wptbl tbody tr:last-child td { border-bottom: 0; }
+    .wptbl tbody tr:hover td { background: #fafbfc; }
+    .col-stt { width: 56px; text-align: center; color: var(--fg-secondary); }
+    .col-unit { width: 110px; }
+    .col-qty { width: 130px; text-align: right; }
+    .wp-qty { font-weight: 700; color: var(--color-red); font-family: ui-monospace, "SF Mono", monospace; }
+    .wp-meta { font-size: 11px; color: var(--fg-secondary); margin-top: 2px; }
+    .wp-pname { font-weight: 600; }
+    .wp-pcode { font-size: 11px; color: var(--fg-secondary); margin-top: 2px; font-family: ui-monospace, monospace; }
+
+    /* Footer */
+    .wpop__foot {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--stroke-base);
+      background: var(--surface-muted);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const ROWS = [
+      { stt: 1, name: "Smart TV Google TV - TCL 55C645",  code: "SP-00012", unit: "Cái",   qty: 25 },
+      { stt: 2, name: "Apple iPhone 14 - 128GB",           code: "SP-00031", unit: "Máy",   qty: 12 },
+      { stt: 3, name: "Samsung Galaxy S23 Ultra",          code: "SP-00044", unit: "Máy",   qty: 8  },
+      { stt: 4, name: "OPPO Reno10 5G - 256GB",            code: "SP-00057", unit: "Máy",   qty: 15 },
+      { stt: 5, name: "Sony Xperia 1 V - 256GB",           code: "SP-00071", unit: "Máy",   qty: 6  },
+    ];
+
+    function Popup() {
+      const [open, setOpen] = useState(true);
+
+      if (!open) {
+        return (
+          <div style={{ textAlign: "center", color: "#fff", marginTop: "40vh" }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Đã đóng popup.</div>
+            <button className="sbtn sbtn--primary" onClick={() => setOpen(true)}>
+              <i className="ph ph-arrow-counter-clockwise" />
+              Mở lại popup
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="wpop" role="dialog" aria-labelledby="wpop-title">
+          <header className="wpop__head">
+            <span className="wpop__icon"><i className="ph ph-warning" /></span>
+            <div className="wpop__title" id="wpop-title">
+              Cảnh báo mua hàng quá giới hạn tồn kho của sản phẩm
+              <div className="wpop__sub">
+                {ROWS.length} sản phẩm có số lượng mua vượt quá giới hạn tồn kho cho phép. Vui lòng kiểm tra trước khi tiếp tục.
+              </div>
+            </div>
+            <button className="wpop__x" onClick={() => setOpen(false)} aria-label="Đóng"><i className="ph ph-x" /></button>
+          </header>
+
+          <div className="wpop__body">
+            <table className="wptbl">
+              <thead>
+                <tr>
+                  <th className="col-stt">STT</th>
+                  <th>Tên sản phẩm</th>
+                  <th className="col-unit">Đơn vị tính</th>
+                  <th className="col-qty">Số lượng mua</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ROWS.map((r) => (
+                  <tr key={r.stt}>
+                    <td className="col-stt">{r.stt}</td>
+                    <td>
+                      <div className="wp-pname">{r.name}</div>
+                      <div className="wp-pcode">{r.code}</div>
+                    </td>
+                    <td>{r.unit}</td>
+                    <td className="col-qty"><span className="wp-qty">{r.qty}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <footer className="wpop__foot">
+            <button className="sbtn sbtn--outline" onClick={() => setOpen(false)}>Đóng</button>
+            <button className="sbtn sbtn--primary" onClick={() => setOpen(false)}>
+              <i className="ph ph-shopping-cart" />
+              Tiếp tục mua
+            </button>
+          </footer>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <div className="stage">
+          <Popup />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+  </script>
+</body>
+</html>

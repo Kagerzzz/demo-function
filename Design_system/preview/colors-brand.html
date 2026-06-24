@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Brand colors" subtitle="Pink→coral brand gradient + stops" viewport="700x160" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Brand colors</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 20px; }
+  .row { display: flex; gap: 16px; align-items: stretch; }
+  .swatch { flex: 1; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; border: 1px solid var(--stroke-base); }
+  .swatch.gradient { background: var(--brand-gradient-h); color: #fff; border-color: transparent; }
+  .swatch.pink { background: var(--brand-pink); color: #fff; border-color: transparent; }
+  .swatch.coral { background: var(--brand-coral); color: #fff; border-color: transparent; }
+  .swatch .name { font-weight: 700; font-size: 14px; letter-spacing: 0.005em; }
+  .swatch .meta { font-size: 12px; opacity: 0.9; font-weight: 500; }
+  .swatch .hex { font-size: 12px; font-family: ui-monospace, "SF Mono", monospace; letter-spacing: 0; opacity: 0.95; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="swatch gradient">
+      <div>
+        <div class="name">Brand gradient</div>
+        <div class="meta">primary CTAs · header strap · active</div>
+      </div>
+      <div class="hex">#fd65af → #fe8377</div>
+    </div>
+    <div class="swatch pink">
+      <div>
+        <div class="name">Brand pink</div>
+        <div class="meta">gradient stop · focus ring tint</div>
+      </div>
+      <div class="hex">#fd65af</div>
+    </div>
+    <div class="swatch coral">
+      <div>
+        <div class="name">Brand coral</div>
+        <div class="meta">gradient stop</div>
+      </div>
+      <div class="hex">#fe8377</div>
+    </div>
+  </div>
+</body></html>

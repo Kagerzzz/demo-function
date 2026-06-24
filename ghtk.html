@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440, initial-scale=1" />
+  <title>Cấu hình nhãn theo sản phẩm - SandboxVN</title>
+  
+  <!-- CDNs for Phosphor Icons, React, ReactDOM, and Babel -->
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <!-- SandboxVN Design System Stylesheets -->
+  <link rel="stylesheet" href="Design_system/colors_and_type.css" />
+  <link rel="stylesheet" href="Design_system/ui_kits/admin/admin.css" />
+  
+  <script>
+    (function() {
+      const errors = [];
+      const oldError = console.error;
+      
+      function renderError(msg) {
+        let errDiv = document.getElementById('debug-err-console');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.id = 'debug-err-console';
+          errDiv.style.position = 'fixed';
+          errDiv.style.bottom = '0';
+          errDiv.style.left = '0';
+          errDiv.style.width = '100%';
+          errDiv.style.backgroundColor = '#fee2e2';
+          errDiv.style.color = '#991b1b';
+          errDiv.style.padding = '16px';
+          errDiv.style.zIndex = '99999';
+          errDiv.style.fontFamily = 'monospace';
+          errDiv.style.fontSize = '14px';
+          errDiv.style.borderTop = '3px solid #ef4444';
+          errDiv.style.whiteSpace = 'pre-wrap';
+          errDiv.style.maxHeight = '40vh';
+          errDiv.style.overflow = 'auto';
+          const target = document.body || document.documentElement;
+          if (target) {
+            target.appendChild(errDiv);
+          }
+        }
+        errDiv.innerHTML += '<div style="margin-bottom: 8px;"><strong>Console Error:</strong> ' + msg + '</div>';
+      }
+      
+      console.error = function() {
+        oldError.apply(console, arguments);
+        const msg = Array.from(arguments).map(arg => {
+          if (arg && arg.stack) return arg.stack;
+          if (typeof arg === 'object') return JSON.stringify(arg);
+          return String(arg);
+        }).join(' ');
+        
+        if (document.body) {
+          renderError(msg);
+        } else {
+          errors.push(msg);
+        }
+      };
+      
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Uncaught error: " + message + " at " + source + ":" + lineno + ":" + colno, error);
+        return false;
+      };
+      
+      window.addEventListener('DOMContentLoaded', function() {
+        if (errors.length > 0) {
+          errors.forEach(renderError);
+        }
+      });
+    })();
+  </script>
+
+  <style>
+    /* =========================================================
+       Custom Customizations for the Standalone Demo
+       ========================================================= */
+    
+    /* Product Tag style inside Main Table */
+    .sprod-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .sprod-chip {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface-highlight);
+      color: var(--fg-base);
+      border: 1px solid var(--stroke-medium);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .sprod-chip--more {
+      background: var(--surface-pink);
+      color: var(--brand-pink);
+      border-color: var(--brand-pink);
+      font-weight: 700;
+    }
+    .sprod-chip--empty {
+      background: transparent;
+      color: var(--fg-secondary);
+      border: 1px dashed var(--stroke-medium);
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    /* custom checkbox style */
+    .schk {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--stroke-medium);
+      border-radius: 3px;
+      cursor: pointer;
+      background: #fff;
+      transition: all 120ms var(--ease-out);
+      position: relative;
+    }
+    .schk:hover {
+      border-color: var(--brand-pink);
+    }
+    .schk.is-checked {
+      background: var(--brand-gradient-h);
+      border-color: transparent;
+    }
+    .schk.is-checked::after {
+      content: "";
+      display: block;
+      width: 4px;
+      height: 7px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(0px, -1px);
+      margin-top: -2px;
+    }
+
+    /* Product image box */
+    .sprod-thumb {
+      width: 32px;
+      height: 32px;
+      background: var(--surface-muted);
+      border: 1px solid var(--stroke-base);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-secondary);
+    }
+    .sprod-thumb i.ph {
+      font-size: 18px;
+    }
+
+    /* Modal size and animation */
+    .smodal {
+      animation: modalOpen 240ms var(--ease-out);
+    }
+    @keyframes modalOpen {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .smodal-filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    /* Dropdown element styling */
+    .sselect {
+      display: inline-flex;
+      align-items: center;
+      height: 40px;
+      padding: 0 12px;
+      background: #fff;
+      border: 1px solid var(--stroke-base);
+      border-radius: 8px;
+      color: var(--fg-base);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 120ms;
+    }
+    .sselect:focus {
+      border-color: var(--brand-pink);
+      box-shadow: var(--shadow-focus);
+    }
+
+    /* GHTK Specific card header banner */
+    .sghtk-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: linear-gradient(to right, #ffffff, var(--surface-pink));
+    }
+    .sghtk-logo {
+      width: 48px;
+      height: 48px;
+      background: #068b00; /* GHTK green */
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    .sghtk-banner__info h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--fg-base);
+    }
+    .sghtk-banner__info p {
+      font-size: 12px;
+      color: var(--fg-secondary);
+      margin-top: 2px;
+    }
+    /* Custom Toggle Switch styling */
+    .sswitch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .sswitch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .sswitch__slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--stroke-medium);
+      transition: .2s var(--ease-out);
+      border-radius: 24px;
+    }
+    .sswitch__slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s var(--ease-out);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .sswitch input:checked + .sswitch__slider {
+      background: var(--brand-gradient-h);
+    }
+    .sswitch input:checked + .sswitch__slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Toast styling */
+    .stoast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--fg-base);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-popover);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      font-size: 14px;
+      font-weight: 500;
+      animation: slideIn 240ms var(--ease-out);
+    }
+    .stoast i.ph-circle-check-fill {
+      color: #068b00;
+      font-size: 18px;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // ─────────────────────────────────────────────────────────
+    // Design System Shared Components (Inlined for 100% file:// compatibility)
+    // ─────────────────────────────────────────────────────────
+
+    function Button({ variant = "primary", icon, iconRight, onClick, children, style }) {
+      const cls = "sbtn sbtn--" + variant;
+      return (
+        <button className={cls} onClick={onClick} style={style}>
+          {icon ? <i className={"ph ph-" + icon} /> : null}
+          {children ? <span>{children}</span> : null}
+          {iconRight ? <i className={"ph ph-" + iconRight} /> : null}
+        </button>
+      );
+    }
+
+    function Field({ icon, placeholder, value, onChange, width = 220, iconRight }) {
+      return (
+        <label className="sfield" style={{ width }}>
+          {icon ? <i className={"ph ph-" + icon} /> : null}
+          <input
+            className="sfield__input"
+            placeholder={placeholder}
+            value={value || ""}
+            onChange={(e) => onChange && onChange(e.target.value)}
+          />
+          {iconRight ? <i className={"ph ph-" + iconRight} /> : null}
+        </label>
+      );
+    }
+
+    function Status({ tone = "green", children }) {
+      return <span className={"status status--" + tone}>{children}</span>;
+    }
+
+    // Avatar implementation from Common.jsx
+    function Avatar({ src, size = 32, name }) {
+      const initials = (name || "?").split(" ").map((p) => p[0]).slice(-2).join("");
+      return src ? (
+        <span
+          className="savatar"
+          style={{ width: size, height: size, backgroundImage: `url(${src})` }}
+          title={name}
+        />
+      ) : (
+        <span
+          className="savatar savatar--initials"
+          style={{ width: size, height: size, fontSize: size * 0.4 }}
+          title={name}
+        >{initials}</span>
+      );
+    }
+
+    // Modal implementation from Common.jsx
+    function Modal({ open, onClose, title, footer, children, width = 520 }) {
+      if (!open) return null;
+      return (
+        <div className="smodal-scrim" onClick={onClose}>
+          <div className="smodal" style={{ width }} onClick={(e) => e.stopPropagation()}>
+            <header className="smodal__head">
+              <span>{title}</span>
+              <button className="smodal__x" onClick={onClose}><i className="ph ph-x" /></button>
+            </header>
+            <div className="smodal__body">{children}</div>
+            <footer className="smodal__foot">{footer}</footer>
+          </div>
+        </div>
+      );
+    }
+
+    const MODULES = [
+      { id: "marketing",   label: "Marketing",  icon: "Design_system/assets/modules/marketing.png" },
+      { id: "sales",       label: "Sales",      icon: "Design_system/assets/modules/sales.png" },
+      { id: "storage",     label: "Kho vận",    icon: "Design_system/assets/modules/storage.png" },
+      { id: "buy",         label: "Mua hàng",   icon: "Design_system/assets/modules/buy.png" },
+      { id: "account",     label: "Kế toán",    icon: "Design_system/assets/modules/account.png" },
+      { id: "cash",        label: "Cửa hàng",   icon: "Design_system/assets/modules/cash.png" },
+      { id: "job",         label: "Công việc",  icon: "Design_system/assets/modules/job.png" },
+      { id: "customer",    label: "Khách hàng", icon: "Design_system/assets/modules/customer.png" },
+      { id: "employee",    label: "Nhân sự",    icon: "Design_system/assets/modules/employee.png" },
+      { id: "production",  label: "Sản xuất",   icon: "Design_system/assets/modules/utilities.png" },
+      { id: "report",      label: "Báo cáo",    icon: "Design_system/assets/modules/report.png" },
+    ];
+
+    function Sidebar({ active, onSelect }) {
+      return (
+        <aside className="ssidebar">
+          <div className="ssidebar__logo">
+            <img src="Design_system/assets/logo-primary.png" alt="SandBox" />
+          </div>
+          <nav className="ssidebar__nav">
+            {MODULES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={"smod " + (m.id === active ? "smod--active" : "")}
+                onClick={() => onSelect && onSelect(m.id)}
+                title={m.label}
+              >
+                <span className="smod__sticker" />
+                <img src={m.icon} alt="" />
+                <span className="smod__label">{m.label}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+      );
+    }
+
+    function TopNav() {
+      return (
+        <header className="stopnav">
+          <button className="stopnav__hamb" title="Menu"><i className="ph ph-list" /></button>
+          <div className="stopnav__spacer" />
+
+          <div className="stopnav__item stopnav__item--notif">
+            <span className="stopnav__bell">
+              <i className="ph ph-bell" />
+              <span className="badge-count">4</span>
+            </span>
+            Thông báo hệ thống
+          </div>
+          <div className="stopnav__item">
+            <i className="ph ph-globe" />
+            Website đặt chỗ
+          </div>
+          <div className="stopnav__item stopnav__item--brand">
+            <i className="ph ph-storefront" />
+            Chi nhánh Cầu Giấy
+            <i className="ph ph-caret-down" />
+          </div>
+
+          <div className="stopnav__icons">
+            <span className="stopnav__icobtn">
+              <i className="ph ph-bell" />
+              <span className="badge-count">4</span>
+            </span>
+            <span className="stopnav__icobtn"><i className="ph ph-rocket-launch" /></span>
+          </div>
+
+          <div className="stopnav__profile">
+            <Avatar src="Design_system/assets/avatars/avatar-04.jpg" name="Nguyễn Văn An" size={36} />
+            <div>
+              <div className="stopnav__profile-n">Nguyễn Văn An</div>
+              <div className="stopnav__profile-r">Admin đơn vị</div>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Mock Data
+    // ─────────────────────────────────────────────────────────
+
+    // 35 Mock products for the configuration table
+    const MOCK_PRODUCTS = [
+      { id: "SP001", name: "iPhone 15 Pro Max 256GB", code: "SP-001", group: "Điện thoại & Máy tính bảng" },
+      { id: "SP002", name: "iPad Air 5 M1 Wifi 64GB", code: "SP-002", group: "Điện thoại & Máy tính bảng" },
+      { id: "SP003", name: "Tai nghe AirPods Pro Gen 2", code: "SP-003", group: "Phụ kiện công nghệ" },
+      { id: "SP004", name: "Củ sạc nhanh Anker 20W Nano Pro", code: "SP-004", group: "Phụ kiện công nghệ" },
+      { id: "SP005", name: "Bàn phím cơ Keychron K2 V2", code: "SP-005", group: "Phụ kiện công nghệ" },
+      { id: "SP006", name: "Chuột không dây Logitech MX Master 3S", code: "SP-006", group: "Phụ kiện công nghệ" },
+      { id: "SP007", name: "Áo thun Polo Nam Slim Fit", code: "SP-007", group: "Thời trang nam/nữ" },
+      { id: "SP008", name: "Quần jean Denim Nữ dáng suông", code: "SP-008", group: "Thời trang nam/nữ" },
+      { id: "SP009", name: "Nồi chiên không dầu Philips 4.1L", code: "SP-009", group: "Gia dụng & Đời sống" },
+      { id: "SP010", name: "Quạt cây Panasonic F-409K", code: "SP-010", group: "Gia dụng & Đời sống" },
+      { id: "SP011", name: "Samsung Galaxy S24 Ultra 512GB", code: "SP-011", group: "Điện thoại & Máy tính bảng" },
+      { id: "SP012", name: "Đế sạc không dây 3-in-1 Magsafe", code: "SP-012", group: "Phụ kiện công nghệ" },
+      { id: "SP013", name: "Balo công sở chống nước Mark Ryden", code: "SP-013", group: "Thời trang nam/nữ" },
+      { id: "SP014", name: "Đèn bàn học chống cận Taotronics", code: "SP-014", group: "Gia dụng & Đời sống" },
+      { id: "SP015", name: "Máy hút bụi giường nệm Deerma", code: "SP-015", group: "Gia dụng & Đời sống" },
+      { id: "SP016", name: "Cáp sạc USB-C to Lightning Baseus 1m", code: "SP-016", group: "Phụ kiện công nghệ" },
+      { id: "SP017", name: "Sách khéo ăn khéo nói sẽ có được thiên hạ", code: "SP-017", group: "Sách & Văn phòng phẩm" },
+      { id: "SP018", name: "Sổ tay ghi chép bìa da A5 Muji", code: "SP-018", group: "Sách & Văn phòng phẩm" },
+      { id: "SP019", name: "Bút bi nước mực gel đen Pentel 0.5mm", code: "SP-019", group: "Sách & Văn phòng phẩm" },
+      { id: "SP020", name: "Mũ bảo helmet 3/4 Royal M20C", code: "SP-020", group: "Phụ kiện xe máy" },
+      { id: "SP021", name: "Găng tay da cừu đi xe máy nam", code: "SP-021", group: "Phụ kiện xe máy" },
+      { id: "SP022", name: "Kính cường lực iPhone 15 Kingkong", code: "SP-022", group: "Phụ kiện công nghệ" },
+      { id: "SP023", name: "Ốp lưng silicon chống bẩn iPhone 15", code: "SP-023", group: "Phụ kiện công nghệ" },
+      { id: "SP024", name: "Máy pha cà phê mini Espresso Lock&Lock", code: "SP-024", group: "Gia dụng & Đời sống" },
+      { id: "SP025", name: "Bình giữ nhiệt inox 304 Zebra 500ml", code: "SP-025", group: "Gia dụng & Đời sống" },
+      { id: "SP026", name: "Gối cao su non chống mỏi vai gáy", code: "SP-026", group: "Gia dụng & Đời sống" },
+      { id: "SP027", name: "Túi chống sốc Macbook Pro 14 inch", code: "SP-027", group: "Phụ kiện công nghệ" },
+      { id: "SP028", name: "Giá đỡ điện thoại kẹp bàn kim loại", code: "SP-028", group: "Phụ kiện công nghệ" },
+      { id: "SP029", name: "Thắt lưng da bò nam khóa tự động", code: "SP-029", group: "Thời trang nam/nữ" },
+      { id: "SP030", name: "Tất cổ ngắn cotton kháng khuẩn (Set 5 đôi)", code: "SP-030", group: "Thời trang nam/nữ" },
+      { id: "SP031", name: "MacBook Air M2 13 inch 8GB/256GB", code: "SP-031", group: "Điện thoại & Máy tính bảng" },
+      { id: "SP032", name: "Bàn di chuột cỡ lớn 90x40cm", code: "SP-032", group: "Phụ kiện công nghệ" },
+      { id: "SP033", name: "Kệ để màn hình máy tính bằng gỗ sồi", code: "SP-033", group: "Gia dụng & Đời sống" },
+      { id: "SP034", name: "Loa Bluetooth di động JBL Go 3", code: "SP-034", group: "Phụ kiện công nghệ" },
+      { id: "SP035", name: "Đồng hồ thông minh Xiaomi Band 8", code: "SP-035", group: "Phụ kiện công nghệ" }
+    ];
+
+    // Product Groups for filter dropdown
+    const PRODUCT_GROUPS = [
+      "Tất cả nhóm sản phẩm",
+      "Điện thoại & Máy tính bảng",
+      "Phụ kiện công nghệ",
+      "Gia dụng & Đời sống",
+      "Thời trang nam/nữ",
+      "Sách & Văn phòng phẩm",
+      "Phụ kiện xe máy"
+    ];
+
+    // Initial label assignments
+    const INITIAL_LABELS = [
+      { id: 1, name: "Không giao được thu phí", productIds: ["SP001", "SP002", "SP003"] },
+      { id: 2, name: "Giao hàng 1 phần thu hồi chứng từ", productIds: ["SP007"] },
+      { id: 3, name: "Gọi shop khi khách không nhận hàng / Không liên lạc được / Sai thông tin", productIds: ["SP004", "SP005", "SP006", "SP009", "SP010", "SP012", "SP013"] },
+      { id: 4, name: "Giao hàng 1 phần đổi trả hàng", productIds: [] },
+      { id: 5, name: "Giá trị cao/đặc biệt", productIds: ["SP011", "SP031"] },
+      { id: 6, name: "Cho xem hàng", productIds: [] },
+      { id: 7, name: "Giao hàng 1 phần chọn sản phẩm", productIds: ["SP034"] }
+    ];
+
+    // Checkbox primitive (retained locally since not in Common.jsx)
+    function Checkbox({ checked, onChange }) {
+      return (
+        <span 
+          className={"schk " + (checked ? "is-checked" : "")} 
+          onClick={() => onChange && onChange(!checked)} 
+        />
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Main App Component
+    // ─────────────────────────────────────────────────────────
+
+    function App() {
+      const [labels, setLabels] = useState(INITIAL_LABELS);
+      const [configModalOpen, setConfigModalOpen] = useState(false);
+      const [configModalView, setConfigModalView] = useState("table"); // "table" | "select-products"
+      const [activeLabel, setActiveLabel] = useState(null);
+      const [tempSelectedIds, setTempSelectedIds] = useState([]);
+      const [activeTab, setActiveTab] = useState("config");
+      const [autoAssignLabels, setAutoAssignLabels] = useState(true);
+      // Filter states inside modal
+      const [modalQuery, setModalQuery] = useState("");
+      const [modalGroupFilter, setModalGroupFilter] = useState("Tất cả nhóm sản phẩm");
+      const [modalSubTab, setModalSubTab] = useState("added"); // "added" | "not_added"
+      const [modalCheckboxIds, setModalCheckboxIds] = useState([]); // temporary checkboxes selection
+      
+      // Toast notification state
+      const [toastMsg, setToastMsg] = useState("");
+
+      // Helper function to show toast
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => {
+          setToastMsg("");
+        }, 3000);
+      };
+
+      // Open main configuration table modal
+      const handleOpenConfigModal = () => {
+        setConfigModalView("table");
+        setConfigModalOpen(true);
+      };
+
+      // Open product selection view inside modal
+      const handleOpenProductSelect = (label) => {
+        setActiveLabel(label);
+        setTempSelectedIds([...label.productIds]);
+        setModalQuery("");
+        setModalGroupFilter("Tất cả nhóm sản phẩm");
+        setModalSubTab(label.productIds.length > 0 ? "added" : "not_added");
+        setModalCheckboxIds([]);
+        setConfigModalView("select-products");
+      };
+
+      // Handle checkbox selection for a single product in modal
+      const handleToggleCheckbox = (productId) => {
+        if (modalCheckboxIds.includes(productId)) {
+          setModalCheckboxIds(modalCheckboxIds.filter(id => id !== productId));
+        } else {
+          setModalCheckboxIds([...modalCheckboxIds, productId]);
+        }
+      };
+
+      // Add a single product to label's productIds
+      const handleAddSingle = (productId) => {
+        if (!tempSelectedIds.includes(productId)) {
+          setTempSelectedIds([...tempSelectedIds, productId]);
+          // Remove from selection if checked
+          setModalCheckboxIds(modalCheckboxIds.filter(id => id !== productId));
+          showToast("Đã thêm sản phẩm vào nhãn!");
+        }
+      };
+
+      // Remove a single product from label's productIds
+      const handleRemoveSingle = (productId) => {
+        setTempSelectedIds(tempSelectedIds.filter(id => id !== productId));
+        // Remove from selection if checked
+        setModalCheckboxIds(modalCheckboxIds.filter(id => id !== productId));
+        showToast("Đã xóa sản phẩm khỏi nhãn!");
+      };
+
+      // Bulk add selected products from checkbox selection
+      const handleBulkAdd = () => {
+        if (modalCheckboxIds.length === 0) return;
+        const newSelected = [...tempSelectedIds];
+        modalCheckboxIds.forEach(id => {
+          if (!newSelected.includes(id)) {
+            newSelected.push(id);
+          }
+        });
+        setTempSelectedIds(newSelected);
+        setModalCheckboxIds([]); // Clear selections after action
+        showToast(`Đã thêm ${modalCheckboxIds.length} sản phẩm thành công!`);
+      };
+
+      // Bulk remove selected products from checkbox selection
+      const handleBulkRemove = () => {
+        if (modalCheckboxIds.length === 0) return;
+        setTempSelectedIds(tempSelectedIds.filter(id => !modalCheckboxIds.includes(id)));
+        setModalCheckboxIds([]); // Clear selections after action
+        showToast(`Đã xóa ${modalCheckboxIds.length} sản phẩm thành công!`);
+      };
+
+      // Filtered products list inside modal based on search, group, and sub-tab
+      const filteredProducts = useMemo(() => {
+        return MOCK_PRODUCTS.filter(p => {
+          const isAdded = tempSelectedIds.includes(p.id);
+          const matchesTab = modalSubTab === "added" ? isAdded : !isAdded;
+          const matchesQuery = p.name.toLowerCase().includes(modalQuery.toLowerCase()) || 
+                               p.code.toLowerCase().includes(modalQuery.toLowerCase());
+          const matchesGroup = modalGroupFilter === "Tất cả nhóm sản phẩm" || p.group === modalGroupFilter;
+          return matchesTab && matchesQuery && matchesGroup;
+        });
+      }, [modalQuery, modalGroupFilter, modalSubTab, tempSelectedIds]);
+
+      // Check if all filtered products are currently checked in checkbox state
+      const isAllFilteredChecked = useMemo(() => {
+        if (filteredProducts.length === 0) return false;
+        return filteredProducts.every(p => modalCheckboxIds.includes(p.id));
+      }, [filteredProducts, modalCheckboxIds]);
+
+      // Select / Deselect all currently filtered products in checkbox state
+      const handleToggleAllFiltered = () => {
+        const filteredIds = filteredProducts.map(p => p.id);
+        if (isAllFilteredChecked) {
+          // Deselect all filtered products from checked state
+          setModalCheckboxIds(modalCheckboxIds.filter(id => !filteredIds.includes(id)));
+        } else {
+          // Select all filtered products
+          const newChecked = [...modalCheckboxIds];
+          filteredIds.forEach(id => {
+            if (!newChecked.includes(id)) {
+              newChecked.push(id);
+            }
+          });
+          setModalCheckboxIds(newChecked);
+        }
+      };
+
+      // Save changes and close modal
+      const handleSaveProducts = () => {
+        setLabels(labels.map(l => {
+          if (l.id === activeLabel.id) {
+            return { ...l, productIds: tempSelectedIds };
+          }
+          return l;
+        }));
+        setConfigModalView("table");
+        showToast(`Cập nhật nhãn "${activeLabel.name}" thành công!`);
+      };
+
+      // Render product labels for main table row
+      const renderProductLabels = (productIds) => {
+        if (productIds.length === 0) {
+          return <span className="sprod-chip sprod-chip--empty">Chưa có sản phẩm được chọn</span>;
+        }
+
+        const selectedProducts = productIds.map(id => MOCK_PRODUCTS.find(p => p.id === id)).filter(Boolean);
+        const displayLimit = 2;
+        const shown = selectedProducts.slice(0, displayLimit);
+        const moreCount = selectedProducts.length - displayLimit;
+
+        return (
+          <div className="sprod-chips">
+            {shown.map(p => (
+              <span key={p.id} className="sprod-chip">{p.name}</span>
+            ))}
+            {moreCount > 0 ? (
+              <span className="sprod-chip sprod-chip--more">+{moreCount}</span>
+            ) : null}
+          </div>
+        );
+      };
+
+      return (
+        <div className="sshell">
+          <Sidebar active="storage" />
+          
+          <div className="sshell__main">
+            <TopNav />
+            
+            <main className="sshell__work">
+              {/* Breadcrumbs */}
+              <div className="sphead" style={{ paddingBottom: "10px" }}>
+                <div>
+                  <h2 className="sphead__t">Kết nối giao hàng GHTK</h2>
+                  <div className="sphead__crumbs">
+                    <span>Tổng quan</span>
+                    <i className="ph ph-caret-right" />
+                    <span>Kho vận</span>
+                    <i className="ph ph-caret-right" />
+                    <span>Kết nối giao hàng</span>
+                    <i className="ph ph-caret-right" />
+                    <span>GHTK</span>
+                    <i className="ph ph-caret-right" />
+                    <b>Cấu hình nhãn sản phẩm</b>
+                  </div>
+                </div>
+              </div>
+
+              {/* GHTK Banner Card with 12px border radius */}
+              <div className="card" style={{ marginBottom: "20px", borderRadius: "12px", overflow: "hidden" }}>
+                <div className="sghtk-banner">
+                  <div className="sghtk-logo">GHTK</div>
+                  <div className="sghtk-banner__info">
+                    <h3>Giao Hàng Tiết Kiệm (GHTK)</h3>
+                    <p>Kết nối vận chuyển nhanh chóng, cập nhật trạng thái đơn hàng thời gian thực.</p>
+                  </div>
+                  <div style={{ marginLeft: "auto" }}>
+                    <Status tone="green">Đang hoạt động</Status>
+                  </div>
+                </div>
+
+                {/* Sub-Tabs under GHTK banner */}
+                <div style={{ display: "flex", borderBottom: "1px solid var(--stroke-base)", padding: "0 20px", background: "#fff" }}>
+                  <span 
+                    style={{ 
+                      padding: "14px 16px", 
+                      fontSize: "14px", 
+                      color: activeTab === "connect" ? "var(--brand-pink)" : "var(--fg-secondary)", 
+                      borderBottom: activeTab === "connect" ? "2px solid var(--brand-pink)" : "2px solid transparent", 
+                      cursor: "pointer", 
+                      fontWeight: activeTab === "connect" ? "700" : "500",
+                      display: "inline-flex",
+                      alignItems: "center"
+                    }}
+                    onClick={() => setActiveTab("connect")}
+                  >
+                    <i className="ph ph-plugs" style={{ marginRight: "6px" }} />Kết nối
+                  </span>
+                  <span 
+                    style={{ 
+                      padding: "14px 16px", 
+                      fontSize: "14px", 
+                      color: activeTab === "config" ? "var(--brand-pink)" : "var(--fg-secondary)", 
+                      borderBottom: activeTab === "config" ? "2px solid var(--brand-pink)" : "2px solid transparent", 
+                      cursor: "pointer", 
+                      fontWeight: activeTab === "config" ? "700" : "500",
+                      display: "inline-flex",
+                      alignItems: "center"
+                    }}
+                    onClick={() => setActiveTab("config")}
+                  >
+                    <i className="ph ph-sliders" style={{ marginRight: "6px" }} />Cấu hình
+                  </span>
+                </div>
+
+                {/* Tab Content: Connection */}
+                {activeTab === "connect" && (
+                  <div style={{ padding: "20px", background: "#fff" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                      <div className="slbl-field">
+                        <div className="slbl-field__lbl" style={{ fontSize: "13px", color: "var(--fg-base)", marginBottom: "6px" }}>Mã cửa hàng tại GHTK <span className="t-required">*</span></div>
+                        <label className="sfield" style={{ width: "100%" }}>
+                          <input className="sfield__input" value="SBOX-88129" disabled style={{ color: "var(--fg-secondary)" }} />
+                        </label>
+                      </div>
+                      <div className="slbl-field">
+                        <div className="slbl-field__lbl" style={{ fontSize: "13px", color: "var(--fg-base)", marginBottom: "6px" }}>Token API kết nối <span className="t-required">*</span></div>
+                        <label className="sfield" style={{ width: "100%" }}>
+                          <input className="sfield__input" type="password" value="••••••••••••••••••••••••••••••••" disabled style={{ color: "var(--fg-secondary)" }} />
+                        </label>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                      <Button variant="primary" icon="plugs" onClick={() => showToast("Kết nối GHTK hoạt động tốt!")}>Kiểm tra kết nối</Button>
+                      <Button variant="outline" icon="copy" onClick={() => showToast("Đã sao chép Webhook!")}>Sao chép Webhook</Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab Content: Configuration (ON/OFF Toggle) */}
+                {activeTab === "config" && (
+                  <div style={{ padding: "20px", background: "#fff" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontWeight: "700", fontSize: "14px", color: "var(--fg-base)" }}>
+                          Tự động gán nhãn đơn hàng theo sản phẩm
+                        </div>
+                        <div style={{ fontSize: "12px", color: "var(--fg-secondary)", marginTop: "4px" }}>
+                          Hệ thống sẽ tự động thêm nhãn vận chuyển của GHTK vào đơn hàng tương ứng dựa trên cấu hình sản phẩm.
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <Button variant="outline" icon="tags" onClick={handleOpenConfigModal}>
+                          Cấu hình nhãn
+                        </Button>
+                        <label className="sswitch">
+                          <input 
+                            type="checkbox" 
+                            checked={autoAssignLabels} 
+                            onChange={(e) => setAutoAssignLabels(e.target.checked)} 
+                          />
+                          <span className="sswitch__slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Divider and Info Tips (always shown) */}
+                    <div style={{ marginTop: "20px", borderTop: "1px solid var(--stroke-base)", paddingTop: "20px" }}>
+                      {/* Info Tips section inside the main config card */}
+                      <div className="panel bg-muted" style={{ borderRadius: "8px", border: "1px dashed var(--stroke-medium)" }}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", fontSize: "13px" }}>
+                          <i className="ph ph-info" style={{ color: "var(--color-blue)", fontSize: "18px", marginTop: "2px" }} />
+                          <div>
+                            <strong style={{ display: "block", marginBottom: "4px" }}>Hướng dẫn cấu hình nhãn GHTK:</strong>
+                            <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: "1.6", color: "var(--fg-base)" }}>
+                              <li>Nhãn áp dụng cho sản phẩm sẽ được tự động gắn kèm khi tạo vận đơn gửi sang GHTK.</li>
+                              <li>Nhấp chọn <strong>Cấu hình nhãn</strong> để thiết lập chi tiết sản phẩm áp dụng cho từng nhãn trong popup.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+
+          {/* CONFIGURATION & SELECTION MODAL */}
+          <Modal
+            open={configModalOpen}
+            onClose={() => setConfigModalOpen(false)}
+            title={
+              configModalView === "table" ? (
+                "Cấu hình nhãn theo sản phẩm GHTK"
+              ) : (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button 
+                      className="sbtn sbtn--ghost sbtn--icon" 
+                      style={{ width: "32px", height: "32px", borderRadius: "50%", padding: 0 }}
+                      onClick={() => setConfigModalView("table")}
+                    >
+                      <i className="ph ph-arrow-left" style={{ fontSize: "18px" }} />
+                    </button>
+                    <span>Chọn sản phẩm áp dụng nhãn</span>
+                  </div>
+                  {activeLabel && (
+                    <div style={{ fontSize: "12px", color: "var(--fg-secondary)", fontWeight: "500", marginTop: "2px", marginLeft: "40px" }}>
+                      Nhãn: <span style={{ color: "var(--brand-pink)", fontWeight: "700" }}>{activeLabel.name}</span>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            width={configModalView === "table" ? 980 : 880}
+            footer={
+              configModalView === "table" ? (
+                <>
+                  <Button variant="primary" icon="check" onClick={() => { setConfigModalOpen(false); showToast("Đã lưu toàn bộ cấu hình nhãn!"); }}>Hoàn tất</Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setConfigModalView("table")}>Quay lại</Button>
+                  <Button variant="primary" icon="floppy-disk" onClick={handleSaveProducts}>Xác nhận chọn</Button>
+                </>
+              )
+            }
+          >
+            {configModalView === "table" ? (
+              /* VIEW 1: Labels Table */
+              <div style={{ padding: "0" }}>
+                <table className="stable">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 80, textAlign: "center" }}>STT</th>
+                      <th style={{ width: 260 }}>Tên nhãn</th>
+                      <th>Sản phẩm áp dụng</th>
+                      <th style={{ width: 180, textAlign: "right" }}>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {labels.map((lbl, idx) => (
+                      <tr key={lbl.id}>
+                        <td style={{ textAlign: "center", color: "var(--fg-secondary)", fontWeight: "500" }}>{idx + 1}</td>
+                        <td>
+                          <div style={{ fontWeight: "700", color: "var(--fg-base)" }}>{lbl.name}</div>
+                        </td>
+                        <td>
+                          {renderProductLabels(lbl.productIds)}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <Button variant="outline" icon="pencil-simple" onClick={() => handleOpenProductSelect(lbl)}>
+                            Thay đổi sản phẩm
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* VIEW 2: Product Grid Selection */
+              <div>
+                {/* Switch button with 2 tabs: Đã thêm & Chưa thêm */}
+                <div style={{ display: "flex", gap: "2px", background: "var(--stroke-base)", padding: "3px", borderRadius: "8px", marginBottom: "14px" }}>
+                  <button 
+                    type="button"
+                    className="sbtn" 
+                    style={{ 
+                      flex: 1, 
+                      height: "36px", 
+                      background: modalSubTab === "added" ? "#fff" : "transparent", 
+                      boxShadow: modalSubTab === "added" ? "var(--shadow-card)" : "none",
+                      color: modalSubTab === "added" ? "var(--brand-pink)" : "var(--fg-base)",
+                      fontWeight: modalSubTab === "added" ? "700" : "500",
+                      borderRadius: "6px",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px"
+                    }}
+                    onClick={() => { setModalSubTab("added"); setModalCheckboxIds([]); }}
+                  >
+                    <i className="ph ph-circle-check-fill" style={{ fontSize: "16px", color: modalSubTab === "added" ? "var(--brand-pink)" : "var(--fg-secondary)" }} />
+                    Đã thêm ({tempSelectedIds.length})
+                  </button>
+                  <button 
+                    type="button"
+                    className="sbtn" 
+                    style={{ 
+                      flex: 1, 
+                      height: "36px", 
+                      background: modalSubTab === "not_added" ? "#fff" : "transparent", 
+                      boxShadow: modalSubTab === "not_added" ? "var(--shadow-card)" : "none",
+                      color: modalSubTab === "not_added" ? "var(--brand-pink)" : "var(--fg-base)",
+                      fontWeight: modalSubTab === "not_added" ? "700" : "500",
+                      borderRadius: "6px",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px"
+                    }}
+                    onClick={() => { setModalSubTab("not_added"); setModalCheckboxIds([]); }}
+                  >
+                    <i className="ph ph-plus-circle-fill" style={{ fontSize: "16px", color: modalSubTab === "not_added" ? "var(--brand-pink)" : "var(--fg-secondary)" }} />
+                    Chưa thêm ({MOCK_PRODUCTS.length - tempSelectedIds.length})
+                  </button>
+                </div>
+
+                {/* Filter controls inside modal */}
+                <div className="smodal-filter-bar">
+                  <Field
+                    icon="magnifying-glass"
+                    placeholder="Tìm theo tên / mã sản phẩm"
+                    value={modalQuery}
+                    onChange={setModalQuery}
+                    width={320}
+                  />
+                  <select
+                    className="sselect"
+                    value={modalGroupFilter}
+                    onChange={(e) => setModalGroupFilter(e.target.value)}
+                    style={{ flex: 1 }}
+                  >
+                    {PRODUCT_GROUPS.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Selection Summary & Bulk Action */}
+                <div style={{ marginBottom: "12px", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center", height: "36px" }}>
+                  <span style={{ color: "var(--fg-secondary)" }}>
+                    Đang hiển thị: <b>{filteredProducts.length}</b> sản phẩm
+                  </span>
+                  
+                  {modalCheckboxIds.length > 0 ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>
+                        Đã tích chọn <b>{modalCheckboxIds.length}</b> sản phẩm
+                      </span>
+                      {modalSubTab === "not_added" ? (
+                        <button 
+                          type="button" 
+                          className="sbtn sbtn--primary" 
+                          onClick={handleBulkAdd} 
+                          style={{ height: "30px", fontSize: "12px", padding: "0 12px" }}
+                        >
+                          <i className="ph ph-plus" style={{ marginRight: "4px" }} />Thêm đã chọn
+                        </button>
+                      ) : (
+                        <button 
+                          type="button" 
+                          className="sbtn sbtn--outline" 
+                          onClick={handleBulkRemove} 
+                          style={{ height: "30px", fontSize: "12px", padding: "0 12px", color: "var(--color-red)", borderColor: "var(--color-red)" }}
+                        >
+                          <i className="ph ph-trash" style={{ marginRight: "4px" }} />Xóa đã chọn
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: "var(--fg-secondary)" }}>
+                      Tích chọn nhiều sản phẩm để thao tác hàng loạt
+                    </span>
+                  )}
+                </div>
+
+                {/* Products Table */}
+                <div className="card" style={{ maxHeight: "350px", overflowY: "auto" }}>
+                  <table className="stable stable--mkt" style={{ width: "100%" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40, textAlign: "center" }}>
+                          <Checkbox 
+                            checked={isAllFilteredChecked} 
+                            onChange={handleToggleAllFiltered}
+                          />
+                        </th>
+                        <th style={{ width: 50, textAlign: "center" }}>STT</th>
+                        <th style={{ width: 60, textAlign: "center" }}>Ảnh</th>
+                        <th style={{ width: 90 }}>Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th style={{ width: 180 }}>Nhóm sản phẩm</th>
+                        <th style={{ width: 120, textAlign: "right" }}>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((prod, index) => {
+                        const isChecked = modalCheckboxIds.includes(prod.id);
+                        return (
+                          <tr 
+                            key={prod.id} 
+                            style={{ cursor: "pointer", background: isChecked ? "var(--surface-pink)" : "transparent" }}
+                            onClick={() => handleToggleCheckbox(prod.id)}
+                          >
+                            <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+                              <Checkbox 
+                                checked={isChecked} 
+                                onChange={() => handleToggleCheckbox(prod.id)}
+                              />
+                            </td>
+                            <td style={{ textAlign: "center", color: "var(--fg-secondary)" }}>{index + 1}</td>
+                            <td style={{ display: "flex", justifyContent: "center" }}>
+                              <div className="sprod-thumb">
+                                <i className="ph ph-package" />
+                              </div>
+                            </td>
+                            <td className="t-mono">{prod.code}</td>
+                            <td>
+                              <b style={{ color: "var(--fg-base)" }}>{prod.name}</b>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{prod.group}</span>
+                            </td>
+                            <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                              {modalSubTab === "not_added" ? (
+                                <button 
+                                  type="button" 
+                                  className="sbtn sbtn--ghost" 
+                                  style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-green)" }}
+                                  onClick={() => handleAddSingle(prod.id)}
+                                >
+                                  <i className="ph ph-plus" style={{ marginRight: "4px" }} />Thêm
+                                </button>
+                              ) : (
+                                <button 
+                                  type="button" 
+                                  className="sbtn sbtn--ghost" 
+                                  style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-red)" }}
+                                  onClick={() => handleRemoveSingle(prod.id)}
+                                >
+                                  <i className="ph ph-trash" style={{ marginRight: "4px" }} />Xóa
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ padding: "40px 0" }}>
+                            <div style={{ textAlign: "center", color: "var(--fg-secondary)" }}>
+                              <i className="ph ph-magnifying-glass" style={{ fontSize: "32px", marginBottom: "8px", display: "block" }} />
+                              Không tìm thấy sản phẩm phù hợp bộ lọc
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </Modal>
+
+          {/* TOAST NOTIFICATION */}
+          {toastMsg ? (
+            <div className="stoast">
+              <i className="ph ph-circle-check-fill" />
+              <span>{toastMsg}</span>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("app"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

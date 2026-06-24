@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Calendar popup" subtitle="VN date picker + quick ranges" viewport="700x380" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Calendar</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: var(--surface-canvas); }
+  .cal { width: 270px; background: #fff; border-radius: 6px; box-shadow: var(--shadow-popover); padding: 12px; }
+  .head { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 10px; font-weight: 600; font-size: 14px; }
+  .head .arrows { display: inline-flex; gap: 6px; color: var(--fg-secondary); }
+  .head .arrows i.ph { font-size: 14px; cursor: pointer; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+  .dow { font-size: 11px; color: var(--fg-secondary); font-weight: 500; padding: 4px 0; }
+  .day { font-size: 12px; padding: 6px 0; border-radius: 4px; color: var(--fg-base); cursor: pointer; }
+  .day.mute { color: var(--fg-secondary); }
+  .day.sun { color: var(--brand-pink); }
+  .day.range { background: var(--surface-pink); }
+  .day.start, .day.end { background: var(--brand-gradient-h); color: #fff; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 4px 0; border-top: 1px solid var(--stroke-base); margin-top: 8px; }
+  .chip { padding: 4px 10px; border-radius: 999px; background: var(--surface-pink); color: var(--brand-pink); font-size: 11px; font-weight: 500; cursor: pointer; }
+  .chip.active { background: var(--brand-gradient-h); color: #fff; }
+</style></head>
+<body>
+  <div class="cal">
+    <div class="head">
+      <div class="arrows"><i class="ph ph-caret-double-left"></i><i class="ph ph-caret-left"></i></div>
+      <div>Tháng 2, 2025</div>
+      <div class="arrows"><i class="ph ph-caret-right"></i><i class="ph ph-caret-double-right"></i></div>
+    </div>
+    <div class="grid">
+      <div class="dow">CN</div><div class="dow">T2</div><div class="dow">T3</div><div class="dow">T4</div><div class="dow">T5</div><div class="dow">T6</div><div class="dow">T7</div>
+      <div class="day mute sun">28</div><div class="day mute">29</div><div class="day mute">30</div><div class="day mute">01</div><div class="day mute">02</div><div class="day mute">03</div><div class="day mute sun">04</div>
+      <div class="day sun">05</div><div class="day">06</div><div class="day">07</div><div class="day">08</div><div class="day">09</div><div class="day">10</div><div class="day sun">11</div>
+      <div class="day sun">12</div><div class="day">13</div><div class="day">14</div><div class="day" style="color:var(--brand-pink)">15</div><div class="day">16</div><div class="day start">17</div><div class="day">18</div>
+      <div class="day range sun">19</div><div class="day range">20</div><div class="day range">21</div><div class="day range">22</div><div class="day range">23</div><div class="day range">24</div><div class="day range sun">25</div>
+      <div class="day sun">26</div><div class="day">27</div><div class="day">28</div><div class="day mute">29</div><div class="day mute">30</div><div class="day mute">31</div><div class="day mute sun">01</div>
+    </div>
+    <div class="chips">
+      <span class="chip">Hôm nay</span>
+      <span class="chip">Hôm qua</span>
+      <span class="chip">7 ngày trước</span>
+      <span class="chip active">Tháng trước</span>
+      <span class="chip">30 ngày trước</span>
+    </div>
+  </div>
+</body></html>

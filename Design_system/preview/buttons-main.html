@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Buttons — main" subtitle="Primary · ghost · outline · icon" viewport="700x230" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: #fff; }
+  .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .row + .row { margin-top: 14px; }
+  .label { width: 110px; font-size: 11px; color: var(--fg-secondary); font-weight: 500; }
+  i.ph { font-size: 18px; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="label">primary</div>
+    <button class="btn btn--primary"><i class="ph ph-plus"></i>Thêm phòng ban</button>
+    <button class="btn btn--primary"><i class="ph ph-plus"></i>Tạo mới</button>
+    <button class="btn btn--primary btn--icon"><i class="ph ph-plus"></i></button>
+  </div>
+  <div class="row">
+    <div class="label">ghost</div>
+    <button class="btn btn--ghost"><i class="ph ph-plus"></i>Thêm phòng ban</button>
+    <button class="btn btn--ghost">Hủy</button>
+    <button class="btn btn--ghost btn--icon"><i class="ph ph-plus"></i></button>
+  </div>
+  <div class="row">
+    <div class="label">outline</div>
+    <button class="btn btn--outline"><i class="ph ph-caret-down"></i>Phòng ban<i class="ph ph-caret-down"></i></button>
+    <button class="btn btn--outline">Hủy</button>
+    <button class="btn btn--outline btn--icon"><i class="ph ph-pencil-simple"></i></button>
+  </div>
+</body></html>

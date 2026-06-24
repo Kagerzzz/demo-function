@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Sidebar tiles" subtitle="13 module tiles with 3D illustrations" viewport="700x270" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Sidebar tiles</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 22px; background: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; max-width: 660px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; border-radius: 8px; cursor: pointer; transition: background 120ms; }
+  .tile:hover { background: var(--surface-highlight); }
+  .tile.active { background: var(--surface-pink); }
+  .tile img { width: 32px; height: 32px; object-fit: contain; }
+  .tile span { font-size: 12px; font-weight: 500; color: var(--fg-base); letter-spacing: 0.005em; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="tile active"><img src="../assets/modules/marketing.png" alt=""><span>Marketing</span></div>
+    <div class="tile"><img src="../assets/modules/sales.png" alt=""><span>Sales</span></div>
+    <div class="tile"><img src="../assets/modules/storage.png" alt=""><span>Kho vận</span></div>
+    <div class="tile"><img src="../assets/modules/buy.png" alt=""><span>Mua hàng</span></div>
+    <div class="tile"><img src="../assets/modules/account.png" alt=""><span>Kế toán</span></div>
+    <div class="tile"><img src="../assets/modules/cash.png" alt=""><span>Cửa hàng</span></div>
+    <div class="tile"><img src="../assets/modules/job.png" alt=""><span>Công việc</span></div>
+    <div class="tile"><img src="../assets/modules/customer.png" alt=""><span>Khách hàng</span></div>
+    <div class="tile"><img src="../assets/modules/employee.png" alt=""><span>Nhân sự</span></div>
+    <div class="tile"><img src="../assets/modules/report.png" alt=""><span>Báo cáo</span></div>
+    <div class="tile"><img src="../assets/modules/utilities.png" alt=""><span>Tiện ích</span></div>
+    <div class="tile"><img src="../assets/modules/setting.png" alt=""><span>Cài đặt</span></div>
+    <div class="tile"><img src="../assets/modules/system.png" alt=""><span>Hệ thống</span></div>
+  </div>
+</body></html>

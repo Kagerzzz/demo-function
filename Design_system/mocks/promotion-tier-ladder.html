@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Khuyến mãi bậc thang (tier ladder)" subtitle="Multi-tier promotion editor + live simulator" viewport="1280x720" -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440, initial-scale=1" />
+  <title>Khuyến mãi bậc thang — SandboxVN</title>
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <link rel="stylesheet" href="../ui_kits/admin/admin.css" />
+  <link rel="stylesheet" href="../promotions/promotions.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    html, body { overflow: auto; height: auto; background: #fff; }
+    .tl-page { padding: 24px 28px 48px; max-width: 1140px; margin: 0 auto; }
+    .tl-page__head { margin-bottom: 18px; }
+    .tl-page__crumbs { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-secondary); margin-bottom: 8px; }
+    .tl-page__crumbs i.ph { font-size: 11px; }
+    .tl-page__title { font-size: 24px; font-weight: 700; line-height: 1.1; margin: 0; }
+    .tl-page__sub { font-size: 13px; color: var(--fg-secondary); margin-top: 6px; line-height: 1.5; max-width: 720px; }
+    .tl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
+
+    /* ─── Tier ladder editor ────────────────────────── */
+    .tl-mode {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px;
+      background: var(--surface-pink);
+      border: 1px solid #ffd9ec;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .tl-mode__l { display: flex; gap: 12px; align-items: center; }
+    .tl-mode__ico {
+      width: 36px; height: 36px;
+      background: var(--brand-gradient-h);
+      border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .tl-mode__ico i.ph { font-size: 18px; }
+    .tl-mode__t { font-size: 14px; font-weight: 700; color: var(--fg-base); }
+    .tl-mode__s { font-size: 12px; color: var(--brand-pink); margin-top: 2px; }
+
+    /* tier card */
+    .tl-tier {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 14px 12px;
+      border: 1px solid var(--stroke-base);
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color 120ms, background 120ms, box-shadow 120ms, transform 120ms;
+    }
+    .tl-tier.is-dragging {
+      opacity: 0.55;
+      transform: scale(0.99);
+      border-color: var(--brand-pink);
+      box-shadow: 0 4px 14px rgba(253,101,175,0.18);
+    }
+    .tl-tier.is-drop-target {
+      border-color: var(--brand-pink);
+      box-shadow: 0 0 0 3px rgba(253,101,175,0.18);
+    }
+    .tl-tier__top {
+      display: grid;
+      grid-template-columns: 22px 40px minmax(0, 1fr) 22px minmax(0, 1fr) 36px;
+      gap: 10px;
+      align-items: center;
+    }
+    .tl-tier__meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-left: 72px;
+    }
+    .tl-handle {
+      width: 22px; height: 38px;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: grab;
+      color: var(--fg-secondary);
+      border-radius: 4px;
+      transition: color 120ms, background 120ms;
+    }
+    .tl-handle:hover { color: var(--brand-pink); background: var(--surface-pink); }
+    .tl-handle:active { cursor: grabbing; }
+    .tl-handle i.ph { font-size: 16px; }
+    .tl-tier__sep {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--surface-pink);
+      color: var(--brand-pink);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .tl-cap {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .tl-cap__inp {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 38px; padding: 0 10px;
+      background: #fff;
+      border: 1px solid var(--stroke-base);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .tl-cap__inp input {
+      flex: 1; min-width: 0;
+      border: 0; outline: 0; background: transparent;
+      font: 600 14px "Inter", sans-serif;
+      color: var(--fg-base);
+      text-align: center;
+    }
+    .tl-cap__inp.is-infinity {
+      background: var(--surface-muted);
+      color: var(--fg-secondary);
+    }
+    .tl-cap__inp.is-infinity input { color: var(--fg-secondary); font-weight: 500; }
+    .tl-cap__toggle {
+      appearance: none; border: 0; background: transparent;
+      padding: 2px; cursor: pointer;
+      color: var(--fg-secondary);
+      display: inline-flex; align-items: center;
+      font-size: 14px;
+    }
+    .tl-cap__toggle:hover { color: var(--brand-pink); }
+    .tl-cap__hint {
+      font-size: 10px;
+      color: var(--fg-secondary);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .tl-tier + .tl-tier { margin-top: 10px; }
+    .tl-tier:hover { border-color: var(--brand-pink); background: #fffafd; }
+    .tl-tier__num {
+      width: 40px; height: 40px;
+      background: var(--brand-gradient-h);
+      color: #fff;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(253, 101, 175, 0.25);
+    }
+    .tl-tier__cell { display: flex; flex-direction: column; gap: 4px; }
+    .tl-tier__lbl {
+      font-size: 11px; font-weight: 600; color: var(--fg-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .tl-tier__row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tl-tier__buy, .tl-tier__get {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px;
+    }
+    .tl-tier__qty {
+      width: 110px;
+    }
+    .tl-tier__prod {
+      flex: 1;
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 38px;
+      padding: 0 10px;
+      background: var(--surface-muted);
+      border: 1px solid var(--stroke-base);
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .tl-tier__prod-thumb {
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      color: rgba(0,0,0,0.55);
+      flex-shrink: 0;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    }
+    .tl-tier__prod-n {
+      font-size: 12.5px; font-weight: 600;
+      color: var(--fg-base);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1;
+    }
+    .tl-tier__prod-caret { color: var(--fg-secondary); font-size: 12px; }
+    .tl-tier__reward {
+      font-size: 12px;
+      padding: 6px 10px;
+      background: var(--color-green-bg);
+      color: var(--color-green);
+      border-radius: 4px;
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tl-tier__reward.is-discount { background: var(--color-blue-bg); color: var(--color-blue); }
+    .tl-tier__reward.is-percent { background: var(--surface-pink); color: var(--brand-pink); }
+    .tl-tier__rm {
+      appearance: none; border: 0;
+      width: 32px; height: 32px;
+      background: transparent;
+      border: 1px solid var(--stroke-medium);
+      border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--fg-secondary);
+      cursor: pointer;
+      transition: color 120ms, border-color 120ms, background 120ms;
+    }
+    .tl-tier__rm:hover { color: var(--color-red); border-color: var(--color-red); background: var(--color-red-bg); }
+    .tl-tier__rm i.ph { font-size: 14px; }
+
+    .tl-arrow {
+      display: inline-flex; align-items: center;
+      color: var(--brand-pink);
+      font-size: 18px;
+      padding: 0 4px;
+    }
+    .tl-arrow i.ph { font-size: 18px; }
+
+    .tl-add {
+      appearance: none; border: 1.5px dashed var(--stroke-medium);
+      background: transparent;
+      width: 100%;
+      height: 48px;
+      border-radius: 8px;
+      font: 500 13px/1 "Inter", sans-serif;
+      color: var(--fg-secondary);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 10px;
+      transition: border-color 120ms, color 120ms, background 120ms;
+    }
+    .tl-add:hover {
+      border-color: var(--brand-pink);
+      color: var(--brand-pink);
+      background: var(--surface-pink);
+    }
+    .tl-add i.ph { font-size: 16px; }
+
+    /* Ladder visualization (graphic) */
+    .tl-viz {
+      display: flex; align-items: flex-end; gap: 10px;
+      padding: 18px;
+      background: var(--surface-muted);
+      border-radius: 8px;
+      margin-top: 16px;
+      min-height: 200px;
+    }
+    .tl-viz__step {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      position: relative;
+    }
+    .tl-viz__bar {
+      width: 100%;
+      background: var(--brand-gradient);
+      border-radius: 6px 6px 0 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      min-height: 30px;
+      box-shadow: 0 -2px 8px rgba(253,101,175,0.18);
+      position: relative;
+    }
+    .tl-viz__bar::before {
+      content: attr(data-tier);
+      position: absolute;
+      top: -22px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--brand-pink);
+      background: #fff;
+      padding: 2px 7px;
+      border-radius: 99px;
+      border: 1px solid #ffd9ec;
+    }
+    .tl-viz__caption {
+      font-size: 11px;
+      color: var(--fg-base);
+      text-align: center;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    .tl-viz__caption b { color: var(--brand-pink); font-weight: 700; }
+
+    /* Rule note */
+    .tl-rule {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: var(--surface-highlight);
+      border-radius: 6px;
+      display: flex; gap: 10px;
+      font-size: 13px;
+      color: var(--fg-base);
+      line-height: 1.55;
+    }
+    .tl-rule i.ph { color: var(--color-blue); font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .tl-rule b { font-weight: 700; }
+
+    /* Meta chip — small pill picker used in the second row of each tier */
+    .tl-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px;
+      background: #fff;
+      border: 1px solid var(--stroke-medium);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--fg-base);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 120ms, background 120ms;
+      white-space: nowrap;
+    }
+    .tl-chip:hover { border-color: var(--brand-pink); }
+    .tl-chip i.ph { font-size: 12px; color: var(--fg-secondary); }
+    .tl-chip__label { font-weight: 500; color: var(--fg-secondary); }
+    .tl-chip__value { font-weight: 700; color: var(--fg-base); }
+    .tl-chip--reward { border: 0; padding: 6px 12px; }
+    .tl-chip--reward.is-percent { background: var(--surface-pink); color: var(--brand-pink); }
+    .tl-chip--reward.is-percent i.ph { color: var(--brand-pink); }
+    .tl-chip--reward.is-discount { background: var(--color-blue-bg); color: var(--color-blue); }
+    .tl-chip--reward.is-discount i.ph { color: var(--color-blue); }
+    .tl-chip--reward .tl-chip__label { color: inherit; opacity: 0.75; }
+    .tl-chip--reward .tl-chip__value { color: inherit; }
+    .tl-chip__pop {
+      position: absolute; top: calc(100% + 4px); left: 0;
+      min-width: 200px;
+      background: #fff;
+      border: 1px solid var(--stroke-medium);
+      border-radius: 6px;
+      box-shadow: var(--shadow-popover);
+      padding: 6px;
+      z-index: 50;
+      cursor: default;
+    }
+    .tl-chip__pop-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--fg-base);
+      cursor: pointer;
+      transition: background 120ms;
+    }
+    .tl-chip__pop-item:hover { background: var(--surface-highlight); }
+    .tl-chip__pop-item.is-active { background: var(--surface-pink); color: var(--brand-pink); font-weight: 600; }
+    .tl-chip__pop-item i.ph { font-size: 14px; color: currentColor; margin-left: auto; }
+    .tl-chip__pop-inp {
+      width: 100%;
+      height: 34px; padding: 0 10px;
+      border: 1px solid var(--stroke-medium);
+      border-radius: 4px;
+      font: 500 13px "Inter", sans-serif;
+      outline: 0;
+      margin: 4px 0;
+    }
+    .tl-chip__pop-inp:focus { border-color: var(--brand-pink); }
+
+    /* Audience colour dot inside chip */
+    .tl-aud-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+
+    /* Behavior toggle (unused now — kept in CSS for reference) */
+    .tl-behavior {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-top: 20px;
+    }
+    .tl-behavior__opt {
+      appearance: none; border: 0;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1.5px solid var(--stroke-medium);
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      display: flex; gap: 12px; align-items: flex-start;
+      transition: border-color 120ms, background 120ms;
+    }
+    .tl-behavior__opt:hover { border-color: var(--brand-pink); }
+    .tl-behavior__opt.is-active {
+      border-color: var(--brand-pink);
+      background: var(--surface-pink);
+    }
+    .tl-behavior__dot {
+      flex-shrink: 0;
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--stroke-medium);
+      border-radius: 50%;
+      background: #fff;
+      margin-top: 2px;
+      position: relative;
+    }
+    .tl-behavior__opt.is-active .tl-behavior__dot { border-color: var(--brand-pink); }
+    .tl-behavior__opt.is-active .tl-behavior__dot::after {
+      content: ""; position: absolute; inset: 3px;
+      background: var(--brand-pink); border-radius: 50%;
+    }
+    .tl-behavior__t { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .tl-behavior__s { font-size: 12px; color: var(--fg-secondary); margin-top: 4px; line-height: 1.4; }
+
+    /* Simulator */
+    .tl-sim {
+      padding: 18px 20px;
+    }
+    .tl-sim__h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .tl-sim__t { font-size: 14px; font-weight: 700; }
+    .tl-sim__live {
+      font-size: 11px; font-weight: 600; color: var(--color-blue);
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--color-blue-bg);
+      padding: 3px 8px; border-radius: 99px;
+    }
+    .tl-sim__live::before {
+      content: ""; width: 6px; height: 6px;
+      border-radius: 50%; background: var(--color-blue);
+      animation: pf-pulse 1.6s infinite;
+    }
+    .tl-sim__slider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .tl-sim__range {
+      flex: 1;
+      appearance: none;
+      height: 6px;
+      background: var(--surface-table-header);
+      border-radius: 99px;
+      outline: 0;
+    }
+    .tl-sim__range::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px; height: 20px;
+      background: var(--brand-gradient-h);
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(253,101,175,0.4);
+      cursor: pointer;
+    }
+    .tl-sim__qty {
+      display: inline-flex; align-items: baseline; gap: 4px;
+      min-width: 76px; justify-content: flex-end;
+      font-size: 13px; color: var(--fg-base);
+    }
+    .tl-sim__qty b { font-size: 20px; font-weight: 800; color: var(--brand-pink); }
+    .tl-sim__result {
+      padding: 14px;
+      background: var(--surface-muted);
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .tl-sim__result.is-active {
+      background: var(--color-green-bg);
+      color: var(--color-green);
+    }
+    .tl-sim__result.is-none {
+      color: var(--fg-secondary);
+      font-style: italic;
+    }
+    .tl-sim__result b { font-weight: 700; }
+    .tl-sim__matched {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 4px 10px;
+      background: #fff;
+      border: 1px solid var(--color-green);
+      border-radius: 99px;
+      font-size: 12px; font-weight: 600;
+      color: var(--color-green);
+      margin-bottom: 8px;
+    }
+    .tl-sim__matched i.ph { font-size: 14px; }
+
+    /* Documentation note */
+    .tl-note {
+      margin-top: 24px;
+      padding: 16px 18px;
+      background: var(--surface-highlight);
+      border-left: 3px solid var(--color-blue);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--fg-base);
+      line-height: 1.6;
+    }
+    .tl-note b { font-weight: 700; }
+    .tl-note__t {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-weight: 700; color: var(--color-blue); margin-bottom: 6px;
+    }
+    .tl-note__t i.ph { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // ─── Product fixtures ────────────────────────────────────
+    const PRODUCT_A = { code: "SP-001", name: "Áo thun SPA — Trắng",         color: "#dce5ee" };
+    const PRODUCT_B = { code: "SP-014", name: "Áo thun B — Khuyến mãi",      color: "#ffd9ec" };
+
+    const REWARD_TYPES = [
+      { value: "free_item", label: "Tặng kèm",          color: "is-percent" }, // pink (gift)
+      { value: "percent",   label: "Giảm %",            color: "is-discount" },
+      { value: "fixed",     label: "Giảm tiền",         color: "is-discount" },
+      { value: "fixed_price", label: "Giá cố định",     color: "" },
+    ];
+
+    // Per-tier product pools (so each tier can choose different products)
+    const A_OPTIONS = [
+      { code: "SP-001", name: "Áo thun SPA — Trắng",      color: "#dce5ee" },
+      { code: "SP-002", name: "Áo thun SPA — Đen",        color: "#3a3a4c" },
+      { code: "SP-003", name: "Áo thun SPA — Hồng",       color: "#ffd9ec" },
+    ];
+    const B_OPTIONS = [
+      { code: "SP-014", name: "Áo thun B — Khuyến mãi",   color: "#ffd9ec" },
+      { code: "SP-015", name: "Túi tote B — Khuyến mãi",  color: "#e6e5ff" },
+      { code: "SP-016", name: "Bình giữ nhiệt B",         color: "#ddfbfb" },
+    ];
+
+    function tierReward(t) {
+      const bProd = t.rewardProd || B_OPTIONS[0];
+      switch (t.rewardType) {
+        case "free_item":    return `Tặng ${t.rewardQty} ${bProd.code}`;
+        case "percent":      return `Giảm ${t.rewardQty}%`;
+        case "fixed":        return `Giảm ${(+t.rewardQty || 0).toLocaleString("vi-VN")}đ`;
+        case "fixed_price":  return `Giá ${(+t.rewardQty || 0).toLocaleString("vi-VN")}đ`;
+        default:             return "—";
+      }
+    }
+    function tierRewardClass(t) {
+      const r = REWARD_TYPES.find((x) => x.value === t.rewardType);
+      return r ? r.color : "";
+    }
+
+    function Stepper({ value, onChange, min = 1, max = 999, width = 110 }) {
+      return (
+        <div className="pf-stepper" style={{ width }}>
+          <button type="button" className="pf-stepper__btn" onClick={() => onChange(Math.max(min, value - 1))}><i className="ph ph-minus" /></button>
+          <input
+            className="pf-stepper__inp"
+            value={value}
+            onChange={(e) => {
+              const v = +e.target.value.replace(/[^\d]/g, "") || min;
+              onChange(Math.max(min, Math.min(max, v)));
+            }}
+          />
+          <button type="button" className="pf-stepper__btn" onClick={() => onChange(Math.min(max, value + 1))}><i className="ph ph-plus" /></button>
+        </div>
+      );
+    }
+
+    function ProductChip({ p, options = [], onPick }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <span className="tl-tier__prod" onClick={() => setOpen(!open)} style={{ position: "relative" }}>
+          <span className="tl-tier__prod-thumb" style={{ background: p.color, color: p.color === "#3a3a4c" ? "#fff" : "rgba(0,0,0,0.55)" }}>
+            {p.code.slice(-2)}
+          </span>
+          <span className="tl-tier__prod-n">{p.name}</span>
+          <i className="ph ph-caret-down tl-tier__prod-caret" />
+          {open ? (
+            <span
+              style={{
+                position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+                background: "#fff", border: "1px solid var(--stroke-medium)",
+                borderRadius: 6, boxShadow: "var(--shadow-popover)",
+                padding: 6, zIndex: 50,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {options.map((o) => (
+                <div
+                  key={o.code}
+                  onClick={() => { onPick(o); setOpen(false); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "6px 8px", borderRadius: 4, cursor: "pointer",
+                    background: o.code === p.code ? "var(--surface-pink)" : "transparent",
+                  }}
+                  onMouseEnter={(e) => { if (o.code !== p.code) e.currentTarget.style.background = "var(--surface-highlight)"; }}
+                  onMouseLeave={(e) => { if (o.code !== p.code) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <span style={{ width: 22, height: 22, borderRadius: 4, background: o.color, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: o.color === "#3a3a4c" ? "#fff" : "rgba(0,0,0,0.55)", flexShrink: 0 }}>{o.code.slice(-2)}</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 500, color: "var(--fg-base)", flex: 1 }}>{o.name}</span>
+                  {o.code === p.code ? <i className="ph ph-check" style={{ color: "var(--brand-pink)" }} /> : null}
+                </div>
+              ))}
+            </span>
+          ) : null}
+        </span>
+      );
+    }
+
+    // Customer-audience options
+    const AUDIENCES = [
+      { id: "all",     name: "Tất cả khách hàng", color: "#9a9ab4" },
+      { id: "vip",     name: "Khách VIP",          color: "#b20089" },
+      { id: "gold",    name: "Khách Vàng",         color: "#cc9900" },
+      { id: "silver",  name: "Khách Bạc",          color: "#9a9ab4" },
+      { id: "new",     name: "Khách mới",          color: "#00aed0" },
+      { id: "wholesale", name: "Khách sỉ",         color: "#ad56f4" },
+    ];
+
+    // ─── Meta-chip pickers ─────────────────────────────────
+    function MetaChip({ label, value, icon, className = "", children, dot }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <span
+          className={"tl-chip " + className}
+          onClick={() => setOpen(!open)}
+        >
+          {icon ? <i className={"ph ph-" + icon} /> : null}
+          {dot ? <span className="tl-aud-dot" style={{ background: dot }} /> : null}
+          <span className="tl-chip__label">{label}:</span>
+          <span className="tl-chip__value">{value}</span>
+          <i className="ph ph-caret-down" />
+          {open ? (
+            <span className="tl-chip__pop" onClick={(e) => e.stopPropagation()}>
+              {typeof children === "function" ? children(() => setOpen(false)) : children}
+            </span>
+          ) : null}
+        </span>
+      );
+    }
+
+    function RewardTypeChip({ tier, onChange }) {
+      const r = REWARD_TYPES.find((x) => x.value === tier.rewardType);
+      const icon = tier.rewardType === "free_item" ? "gift"
+                 : tier.rewardType === "percent" ? "percent"
+                 : tier.rewardType === "fixed" ? "currency-circle-dollar"
+                 : "tag";
+      return (
+        <MetaChip
+          label="Loại ưu đãi"
+          value={r?.label || "—"}
+          icon={icon}
+          className={"tl-chip--reward " + tierRewardClass(tier)}
+        >
+          {(close) => REWARD_TYPES.map((opt) => (
+            <div
+              key={opt.value}
+              className={"tl-chip__pop-item " + (opt.value === tier.rewardType ? "is-active" : "")}
+              onClick={() => { onChange({ ...tier, rewardType: opt.value }); close(); }}
+            >
+              <span>{opt.label}</span>
+              {opt.value === tier.rewardType ? <i className="ph ph-check" /> : null}
+            </div>
+          ))}
+        </MetaChip>
+      );
+    }
+
+    function AudienceChip({ tier, onChange }) {
+      const aud = tier.audience || AUDIENCES[0];
+      return (
+        <MetaChip label="Áp cho" value={aud.name} dot={aud.color}>
+          {(close) => AUDIENCES.map((opt) => (
+            <div
+              key={opt.id}
+              className={"tl-chip__pop-item " + (opt.id === aud.id ? "is-active" : "")}
+              onClick={() => { onChange({ ...tier, audience: opt }); close(); }}
+            >
+              <span className="tl-aud-dot" style={{ background: opt.color }} />
+              <span>{opt.name}</span>
+              {opt.id === aud.id ? <i className="ph ph-check" /> : null}
+            </div>
+          ))}
+        </MetaChip>
+      );
+    }
+
+    function MaxUsesChip({ tier, onChange }) {
+      const unlimited = !tier.maxUses || tier.maxUses < 1;
+      const value = unlimited ? "∞ / đơn" : `${tier.maxUses} lần / đơn`;
+      return (
+        <MetaChip label="Tối đa" value={value} icon="hash">
+          {(close) => (
+            <>
+              <div
+                className={"tl-chip__pop-item " + (unlimited ? "is-active" : "")}
+                onClick={() => { onChange({ ...tier, maxUses: null }); close(); }}
+              >
+                <i className="ph ph-infinity" style={{ marginLeft: 0 }} />
+                <span>Không giới hạn</span>
+                {unlimited ? <i className="ph ph-check" /> : null}
+              </div>
+              <div style={{ borderTop: "1px solid var(--stroke-base)", margin: "4px 0" }} />
+              <div style={{ padding: "4px 10px" }}>
+                <div style={{ fontSize: 11, color: "var(--fg-secondary)", marginBottom: 2 }}>Đặt giới hạn</div>
+                <input
+                  type="text"
+                  className="tl-chip__pop-inp"
+                  placeholder="Số lần / đơn"
+                  value={unlimited ? "" : tier.maxUses}
+                  onChange={(e) => {
+                    const v = +e.target.value.replace(/[^\d]/g, "") || 0;
+                    onChange({ ...tier, maxUses: v > 0 ? Math.min(999, v) : null });
+                  }}
+                  autoFocus={!unlimited}
+                />
+              </div>
+            </>
+          )}
+        </MetaChip>
+      );
+    }
+
+    // ─── Tier row ───────────────────────────────────────────
+    function TierRow({
+      tier, index, onChange, onRemove, removable,
+      onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop,
+      isDragging, isDropTarget,
+    }) {
+      const aProd = tier.buyProd || A_OPTIONS[0];
+      const bProd = tier.rewardProd || B_OPTIONS[0];
+
+      return (
+        <div
+          className={"tl-tier " + (isDragging ? "is-dragging " : "") + (isDropTarget ? "is-drop-target " : "")}
+          onDragOver={(e) => { e.preventDefault(); onDragOver && onDragOver(index); }}
+          onDragLeave={onDragLeave}
+          onDrop={(e) => { e.preventDefault(); onDrop && onDrop(index); }}
+        >
+          {/* PRIMARY ROW */}
+          <div className="tl-tier__top">
+            <span
+              className="tl-handle"
+              draggable
+              onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart && onDragStart(index); }}
+              onDragEnd={onDragEnd}
+              title="Kéo để sắp xếp lại"
+            >
+              <i className="ph ph-dots-six-vertical" />
+            </span>
+
+            <span className="tl-tier__num">{index + 1}</span>
+
+            {/* CONDITION */}
+            <div className="tl-tier__cell">
+              <span className="tl-tier__lbl">Khi mua</span>
+              <div className="tl-tier__row">
+                <Stepper value={tier.buyQty} onChange={(v) => onChange({ ...tier, buyQty: v })} />
+                <ProductChip p={aProd} options={A_OPTIONS} onPick={(o) => onChange({ ...tier, buyProd: o })} />
+              </div>
+            </div>
+
+            {/* arrow separator */}
+            <span className="tl-tier__sep"><i className="ph ph-arrow-right" /></span>
+
+            {/* REWARD */}
+            <div className="tl-tier__cell">
+              <span className="tl-tier__lbl">Sẽ được</span>
+              <div className="tl-tier__row">
+                <Stepper value={tier.rewardQty} onChange={(v) => onChange({ ...tier, rewardQty: v })} />
+                <ProductChip p={bProd} options={B_OPTIONS} onPick={(o) => onChange({ ...tier, rewardProd: o })} />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="tl-tier__rm"
+              disabled={!removable}
+              style={removable ? undefined : { opacity: 0.3, cursor: "not-allowed" }}
+              onClick={onRemove}
+              title={removable ? "Xóa bậc" : "Phải có ít nhất 1 bậc"}
+            >
+              <i className="ph ph-trash" />
+            </button>
+          </div>
+
+          {/* META ROW — reward type / audience / max uses */}
+          <div className="tl-tier__meta">
+            <RewardTypeChip tier={tier} onChange={onChange} />
+            <AudienceChip tier={tier} onChange={onChange} />
+            <MaxUsesChip tier={tier} onChange={onChange} />
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Ladder visualization ───────────────────────────────
+    function LadderViz({ tiers, currentTier }) {
+      const max = Math.max(...tiers.map((t) => t.rewardQty), 3);
+      return (
+        <div className="tl-viz">
+          {tiers.map((t, i) => {
+            const isCurrent = currentTier === i;
+            return (
+              <div key={i} className="tl-viz__step">
+                <div className="tl-viz__caption">
+                  Mua <b>{t.buyQty}</b> A<br />
+                  → {tierReward(t).toLowerCase()}
+                </div>
+                <div
+                  className="tl-viz__bar"
+                  data-tier={`Bậc ${i + 1}`}
+                  style={{
+                    height: 30 + (t.rewardQty / max) * 100 + "px",
+                    opacity: currentTier === -1 || isCurrent ? 1 : 0.4,
+                    filter: isCurrent ? "drop-shadow(0 4px 12px rgba(253,101,175,0.5))" : "",
+                  }}
+                >
+                  {t.rewardQty}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ─── Simulator ──────────────────────────────────────────
+    function Simulator({ tiers, behavior }) {
+      const [qty, setQty] = useState(5);
+      const matchedIdx = useMemo(() => {
+        const eligible = tiers
+          .map((t, i) => ({ t, i }))
+          .filter(({ t }) => qty >= t.buyQty);
+        if (!eligible.length) return -1;
+        if (behavior === "highest") return eligible[eligible.length - 1].i;
+        // Could also be 'stacked' — return the latest one (eligible[max])
+        return eligible[eligible.length - 1].i;
+      }, [qty, tiers, behavior]);
+
+      const matched = matchedIdx >= 0 ? tiers[matchedIdx] : null;
+      const nextTier = matchedIdx + 1 < tiers.length ? tiers[matchedIdx + 1] : null;
+      const max = Math.max(...tiers.map((t) => t.buyQty)) + 2;
+
+      return (
+        <div className="card tl-sim">
+          <header className="tl-sim__h">
+            <span className="tl-sim__t">Mô phỏng giỏ hàng</span>
+            <span className="tl-sim__live"><i className="ph ph-eye" />Live</span>
+          </header>
+
+          <div className="tl-sim__slider">
+            <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Mua</span>
+            <input
+              className="tl-sim__range"
+              type="range" min={1} max={max} value={qty}
+              onChange={(e) => setQty(+e.target.value)}
+            />
+            <span className="tl-sim__qty"><b>{qty}</b> A</span>
+          </div>
+
+          {matched ? (
+            <div className="tl-sim__result is-active">
+              <div className="tl-sim__matched">
+                <i className="ph ph-check-circle-fill" />
+                Khớp Bậc {matchedIdx + 1}
+              </div>
+              <div>
+                Khách mua <b>{qty}</b> sản phẩm A → <b>{tierReward(matched)}</b>.
+              </div>
+              {nextTier ? (
+                <div style={{ marginTop: 6, fontSize: 12, color: "var(--fg-secondary)" }}>
+                  Mua thêm <b>{nextTier.buyQty - qty}</b> A nữa để đạt Bậc {matchedIdx + 2}: {tierReward(nextTier)}.
+                </div>
+              ) : (
+                <div style={{ marginTop: 6, fontSize: 12, color: "var(--fg-secondary)" }}>
+                  Đã đạt bậc cao nhất.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="tl-sim__result is-none">
+              Chưa đạt bậc nào. Cần mua tối thiểu <b>{tiers[0]?.buyQty || "—"}</b> sản phẩm A.
+            </div>
+          )}
+
+          <div style={{ marginTop: 16 }}>
+            <LadderViz tiers={tiers} currentTier={matchedIdx} />
+          </div>
+        </div>
+      );
+    }
+
+    // ─── App ────────────────────────────────────────────────
+    function App() {
+      const [tiers, setTiers] = useState([
+        { buyQty: 2, buyProd: A_OPTIONS[0], rewardType: "free_item", rewardQty: 1, rewardProd: B_OPTIONS[0], maxUses: null, audience: AUDIENCES[0] },
+        { buyQty: 3, buyProd: A_OPTIONS[0], rewardType: "free_item", rewardQty: 2, rewardProd: B_OPTIONS[0], maxUses: null, audience: AUDIENCES[2] },
+        { buyQty: 4, buyProd: A_OPTIONS[0], rewardType: "free_item", rewardQty: 3, rewardProd: B_OPTIONS[1], maxUses: null, audience: AUDIENCES[1] },
+      ]);
+      const behavior = "highest";
+
+      // drag & drop state
+      const [dragFrom, setDragFrom] = useState(null);
+      const [dragOver, setDragOver] = useState(null);
+      const onDragStart = (i) => setDragFrom(i);
+      const onDragEnd = () => { setDragFrom(null); setDragOver(null); };
+      const onDragOverRow = (i) => { if (dragFrom !== null && i !== dragOver) setDragOver(i); };
+      const onDragLeave = () => {};
+      const onDrop = (i) => {
+        if (dragFrom === null || dragFrom === i) { onDragEnd(); return; }
+        const next = [...tiers];
+        const [moved] = next.splice(dragFrom, 1);
+        next.splice(i, 0, moved);
+        setTiers(next);
+        onDragEnd();
+      };
+
+      const updateTier = (i, next) => {
+        const copy = [...tiers];
+        copy[i] = next;
+        setTiers(copy);
+      };
+      const removeTier = (i) => setTiers(tiers.filter((_, j) => j !== i));
+      const addTier = () => {
+        const last = tiers[tiers.length - 1] || { buyQty: 1, rewardQty: 0 };
+        setTiers([
+          ...tiers,
+          {
+            buyQty: last.buyQty + 1,
+            buyProd: last.buyProd || A_OPTIONS[0],
+            rewardType: "free_item",
+            rewardQty: (last.rewardQty || 0) + 1,
+            rewardProd: last.rewardProd || B_OPTIONS[0],
+            maxUses: null,
+            audience: AUDIENCES[0],
+          },
+        ]);
+      };
+
+      return (
+        <div className="tl-page">
+          <header className="tl-page__head">
+            <div className="tl-page__crumbs">
+              <span>Marketing</span>
+              <i className="ph ph-caret-right" />
+              <span>Khuyến mãi</span>
+              <i className="ph ph-caret-right" />
+              <b style={{ color: "var(--fg-base)", fontWeight: 600 }}>Mức ưu đãi — Bậc thang</b>
+            </div>
+            <h1 className="tl-page__title">Khuyến mãi nhiều bậc (tier ladder)</h1>
+            <p className="tl-page__sub">
+              Khi cùng một sản phẩm A có thể kích hoạt nhiều mức ưu đãi khác nhau tùy theo số lượng mua. Ví dụ:
+              <em style={{ background: "var(--surface-pink)", color: "var(--brand-pink)", padding: "1px 6px", borderRadius: 4, fontWeight: 600, fontStyle: "normal", margin: "0 4px" }}>Mua 2 A tặng 1 B</em>,
+              <em style={{ background: "var(--surface-pink)", color: "var(--brand-pink)", padding: "1px 6px", borderRadius: 4, fontWeight: 600, fontStyle: "normal", margin: "0 4px" }}>Mua 3 A tặng 2 B</em>,
+              <em style={{ background: "var(--surface-pink)", color: "var(--brand-pink)", padding: "1px 6px", borderRadius: 4, fontWeight: 600, fontStyle: "normal", margin: "0 4px" }}>Mua 4 A tặng 3 B</em>.
+            </p>
+          </header>
+
+          <div className="tl-grid">
+            <div>
+              {/* Section card */}
+              <section className="pf-card">
+                <header className="pf-card__h">
+                  <div className="pf-card__t">
+                    <span className="pf-card__num">4</span>
+                    <div>
+                      <h3 className="pf-card__title">Mức ưu đãi</h3>
+                      <div className="pf-card__sub">Định nghĩa các bậc ưu đãi theo số lượng mua.</div>
+                    </div>
+                  </div>
+                  <div className="pf-card__h-right">
+                    <div className="pf-seg">
+                      <button className="pf-seg__opt">
+                        <i className="ph ph-circle" />
+                        Cố định
+                      </button>
+                      <button className="pf-seg__opt is-active is-active--brand">
+                        <i className="ph ph-stack" />
+                        Bậc thang
+                      </button>
+                    </div>
+                  </div>
+                </header>
+
+                <div className="pf-card__body">
+                  {/* Mode banner */}
+                  <div className="tl-mode">
+                    <div className="tl-mode__l">
+                      <span className="tl-mode__ico"><i className="ph ph-stack" /></span>
+                      <div>
+                        <div className="tl-mode__t">Bậc thang đang bật</div>
+                        <div className="tl-mode__s">Mỗi bậc có ngưỡng số lượng và phần thưởng riêng. Hệ thống tự khớp bậc theo số lượng trong giỏ.</div>
+                      </div>
+                    </div>
+                    <button className="sbtn sbtn--outline" style={{ borderColor: "#ffd9ec", color: "var(--brand-pink)" }}>
+                      <i className="ph ph-info" />
+                      Xem cách hoạt động
+                    </button>
+                  </div>
+
+                  {/* Tier rows */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {tiers.map((t, i) => (
+                      <TierRow
+                        key={i}
+                        tier={t}
+                        index={i}
+                        onChange={(next) => updateTier(i, next)}
+                        onRemove={() => removeTier(i)}
+                        removable={tiers.length > 1}
+                        onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
+                        onDragOver={onDragOverRow}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
+                        isDragging={dragFrom === i}
+                        isDropTarget={dragOver === i && dragFrom !== null && dragFrom !== i}
+                      />
+                    ))}
+                    <button type="button" className="tl-add" onClick={addTier}>
+                      <i className="ph ph-plus-circle" />
+                      Thêm bậc mới
+                    </button>
+                  </div>
+
+                  {/* Behavior note */}
+                  <div className="tl-rule">
+                    <i className="ph ph-info" />
+                    <div>
+                      <b>Cách áp dụng:</b> Khi giỏ hàng khớp nhiều bậc, hệ thống tự chọn <b>bậc cao nhất</b>.
+                      Ví dụ khách mua 5 A → áp Bậc 3 (mua 4 tặng 3). Không cộng dồn các bậc thấp hơn.
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Note */}
+              <div className="tl-note">
+                <div className="tl-note__t"><i className="ph ph-lightbulb" />Khi nào dùng bậc thang?</div>
+                Khi tỷ lệ tặng <b>không tỷ lệ thuận</b> với số lượng mua. Ví dụ:
+                <ul style={{ margin: "8px 0 0 18px", padding: 0 }}>
+                  <li>2A → 1B, 3A → 2B, 4A → 3B (tỷ lệ <b>tăng dần</b> — khuyến khích mua nhiều hơn).</li>
+                  <li>3A → giảm 5%, 5A → giảm 10%, 10A → giảm 20% (giảm <b>theo cấp số</b>).</li>
+                  <li>500k → free ship, 1tr → giảm 50k, 2tr → giảm 150k (theo <b>giá trị đơn</b>, không phải số lượng).</li>
+                </ul>
+                <div style={{ marginTop: 10, fontSize: 12, color: "var(--fg-secondary)" }}>
+                  Nếu chỉ là "mua 2 tặng 1, mua 4 tặng 2, mua 6 tặng 3" (tỷ lệ <b>cố định</b>) — dùng chế độ <b>Cố định</b> + bật <b>lặp lại</b> ở Mục 5 sẽ gọn hơn.
+                </div>
+              </div>
+            </div>
+
+            <aside className="pf-rail">
+              <Simulator tiers={tiers} behavior={behavior} />
+            </aside>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+  </script>
+</body>
+</html>

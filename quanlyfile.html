@@ -1,0 +1,3958 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Tài Liệu ERP</title>
+    <!-- Import Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Phosphor Icons & Design System Styles -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/style.css" />
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <link rel="stylesheet" href="Design_system/colors_and_type.css" />
+    <link rel="stylesheet" href="Design_system/ui_kits/admin/admin.css" />
+
+    <style>
+        :root {
+            --primary-gradient: var(--brand-gradient-h);
+            --primary-color: var(--brand-pink);
+            --primary-light: var(--surface-pink);
+            --text-main: var(--fg-base);
+            --text-muted: var(--fg-secondary);
+            --bg-page: var(--surface-canvas);
+            --bg-card: var(--surface-card);
+            --border-color: var(--stroke-base);
+            --border-hover: var(--stroke-medium);
+            --shadow-sm: var(--shadow-card);
+            --shadow-md: var(--shadow-popover);
+            --shadow-lg: var(--shadow-modal);
+            --transition: all var(--dur-base) var(--ease-out);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 65px;
+            position: relative;
+            z-index: 50;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 10px rgba(253, 101, 175, 0.3);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-badge {
+            font-size: 11px;
+            font-weight: 600;
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* App Workspace */
+        .app-workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        /* Sidebar bên trái */
+        .left-sidebar {
+            width: 320px;
+            border-right: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 4px;
+        }
+
+        /* Cây thư mục động (Dynamic Folder Tree) */
+        .folder-tree-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tree-node-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-node-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 0;
+        }
+
+        .tree-node-row:hover {
+            background-color: #f1f5f9;
+        }
+
+        .tree-node-row.active {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tree-caret {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .tree-caret.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .tree-node-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tree-node-content span {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tree-children-container {
+            margin-left: 14px;
+            border-left: 1px dashed var(--border-color);
+            padding-left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tree-children-container.collapsed {
+            display: none;
+        }
+
+        /* Utility Menu */
+        .utility-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .menu-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .menu-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-badge {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+        }
+
+        .menu-item.active .menu-badge {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Area Content bên phải */
+        .main-container {
+            flex: 1;
+            padding: 32px 40px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        /* Các View nội dung */
+        .content-view {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .content-view.active {
+            display: flex;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--text-main);
+        }
+
+        .breadcrumb-separator {
+            color: #cbd5e1;
+        }
+
+        /* Card chính */
+        .main-content-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 380px;
+            overflow: visible;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .content-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Dropdown hành động Thêm mới */
+        .add-new-dropdown-container {
+            position: relative;
+        }
+
+        .btn-add-new {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(253, 101, 175, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-add-new:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .new-action-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            width: 190px;
+            display: none;
+            z-index: 100;
+            padding: 6px 0;
+        }
+
+        .new-action-dropdown.show {
+            display: block;
+        }
+
+        .new-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .new-dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Table Explorer */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .data-table tr.explorer-row {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .data-table tr.explorer-row:hover {
+            background-color: #f8fafc;
+        }
+
+        .file-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .file-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+        }
+
+        .file-icon.folder {
+            background-color: #fffbeb;
+            color: #d97706;
+        }
+
+        .file-icon.document {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-public { background-color: #ecfdf5; color: #059669; }
+        .badge-private { background-color: #fff1f2; color: #e11d48; }
+        .badge-restricted { background-color: #f5f3ff; color: #6d28d9; }
+
+        /* Action Badges in History */
+        .action-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .act-view { background-color: #eff6ff; color: #1e40af; }
+        .act-create { background-color: #e0f2fe; color: #0369a1; }
+        .act-edit { background-color: #fef3c7; color: #d97706; }
+        .act-delete { background-color: #fee2e2; color: #b91c1c; }
+        .act-restore { background-color: #d1fae5; color: #065f46; }
+        .act-share { background-color: #fae8ff; color: #86198f; }
+
+        /* Button ba chấm */
+        .btn-more {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .btn-more:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        /* Dropdown ba chấm */
+        .action-dropdown {
+            position: absolute;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            width: 170px;
+            display: none;
+            z-index: 9999;
+            padding: 6px 0;
+            text-align: left;
+        }
+
+        .action-dropdown.show {
+            display: block;
+        }
+
+        .action-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .action-dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .action-dropdown-item.danger:hover {
+            background-color: #fef2f2;
+        }
+
+        .btn-action-outline {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+
+        .btn-action-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* -------------------------------------------------------------
+           MODAL SHARE (POPUP PHÂN QUYỀN)
+           ------------------------------------------------------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .modal-title-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-folder-badge {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-gradient);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .modal-title h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-title p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .modal-body {
+            padding: 20px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Form styling inside modals */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        .form-textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        .inherit-card {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inherit-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .inherit-title {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .inherit-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .2s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: var(--primary-gradient);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        /* Search member */
+        .search-add-container {
+            display: flex;
+            gap: 8px;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-input-box {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .search-icon-inside {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Dropdown autocomplete */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            max-height: 180px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .autocomplete-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .permission-select {
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background-color: white;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .btn-add-member {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0 16px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Members List */
+        .members-list-container {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .member-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .member-row:last-child {
+            border-bottom: none;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--text-main);
+        }
+
+        .member-avatar.group-avatar {
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 6px;
+        }
+
+        .member-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .member-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .type-badge {
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .type-badge.user { background: #f1f5f9; color: var(--text-muted); }
+        .type-badge.group { background: #e0f2fe; color: #0369a1; }
+        .type-badge.branch { background: #ecfdf5; color: #047857; }
+        .type-badge.dept { background: #f5f3ff; color: #6d28d9; }
+        .type-badge.role { background: #fff7ed; color: #c2410c; }
+
+        .member-avatar.branch-avatar {
+            background: #ecfdf5;
+            color: #047857;
+            border-radius: 6px;
+        }
+        .member-avatar.dept-avatar {
+            background: #f5f3ff;
+            color: #6d28d9;
+            border-radius: 6px;
+        }
+        .member-avatar.role-avatar {
+            background: #fff7ed;
+            color: #c2410c;
+            border-radius: 6px;
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+        .selected-tag:hover {
+            background-color: #e2e8f0;
+        }
+
+        .member-email {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .member-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .row-permission-badge {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .inherited-indicator {
+            font-size: 9px;
+            color: #d97706;
+            background: #fffbeb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .btn-delete-permission {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .btn-delete-permission:hover {
+            color: #ef4444;
+        }
+
+        .modal-footer {
+            padding: 16px 28px;
+            background-color: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(253, 101, 175, 0.2);
+        }
+
+        .btn-primary-gradient-only {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(253, 101, 175, 0.25);
+            transition: var(--transition);
+        }
+        
+        .btn-primary-gradient-only:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Row permission select */
+        .row-permission-select {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: white;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: #0f172a;
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* -------------------------------------------------------------
+           MODAL PREVIEW FILE (BỘ XEM TÀI LIỆU DOCS, PDF, TXT)
+           ------------------------------------------------------------- */
+        .preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .preview-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .preview-card {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.96);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .preview-overlay.open .preview-card {
+            transform: scale(1);
+        }
+
+        .preview-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-body {
+            flex: 1;
+            padding: 32px;
+            background-color: #f1f5f9;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .document-paper {
+            background-color: white;
+            width: 100%;
+            max-width: 650px;
+            min-height: 800px;
+            box-shadow: var(--shadow-md);
+            padding: 48px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .doc-title {
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .doc-paragraph {
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: #334155;
+            text-align: justify;
+            white-space: pre-wrap;
+        }
+
+        /* -------------------------------------------------------------
+           PATH PICKER STYLING
+           ------------------------------------------------------------- */
+        .path-picker-trigger {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #f8fafc;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .path-picker-trigger:hover {
+            border-color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+
+        .path-picker-dropdown {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: white;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 4px;
+            padding: 6px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+        }
+
+        .path-picker-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: left;
+        }
+
+        .path-picker-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .path-picker-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="sshell">
+  <!-- 1. Global SandboxVN Sidebar -->
+  <aside class="ssidebar">
+    <div class="ssidebar__logo">
+      <img src="Design_system/assets/logo-primary.png" alt="SandBox" />
+    </div>
+    <nav class="ssidebar__nav">
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/marketing.png" alt="" />
+        <span class="smod__label">Marketing</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/sales.png" alt="" />
+        <span class="smod__label">Sales</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/storage.png" alt="" />
+        <span class="smod__label">Kho vận</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/buy.png" alt="" />
+        <span class="smod__label">Mua hàng</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/account.png" alt="" />
+        <span class="smod__label">Kế toán</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/cash.png" alt="" />
+        <span class="smod__label">Cửa hàng</span>
+      </button>
+      <button type="button" class="smod smod--active">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/job.png" alt="" />
+        <span class="smod__label">Công việc</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/customer.png" alt="" />
+        <span class="smod__label">Khách hàng</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/employee.png" alt="" />
+        <span class="smod__label">Nhân sự</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/utilities.png" alt="" />
+        <span class="smod__label">Sản xuất</span>
+      </button>
+      <button type="button" class="smod">
+        <span class="smod__sticker"></span>
+        <img src="Design_system/assets/modules/report.png" alt="" />
+        <span class="smod__label">Báo cáo</span>
+      </button>
+    </nav>
+  </aside>
+
+  <div class="sshell__main">
+    <!-- 2. Global SandboxVN Topbar -->
+    <header class="stopnav">
+      <button class="stopnav__hamb" title="Menu"><i class="ph ph-list"></i></button>
+      <div class="stopnav__spacer"></div>
+
+      <div class="stopnav__item stopnav__item--notif">
+        <span class="stopnav__bell">
+          <i class="ph ph-bell"></i>
+          <span class="badge-count">4</span>
+        </span>
+        Thông báo hệ thống
+      </div>
+      <div class="stopnav__item">
+        <i class="ph ph-globe"></i>
+        Website đặt chỗ
+      </div>
+      <div class="stopnav__item stopnav__item--brand">
+        <i class="ph ph-storefront"></i>
+        Chi nhánh Cầu Giấy
+        <i class="ph ph-caret-down"></i>
+      </div>
+
+      <div class="stopnav__icons">
+        <span class="stopnav__icobtn">
+          <i class="ph ph-bell"></i>
+          <span class="badge-count">4</span>
+        </span>
+        <span class="stopnav__icobtn"><i class="ph ph-rocket-launch"></i></span>
+      </div>
+
+      <div class="stopnav__profile">
+        <img class="savatar" src="Design_system/assets/avatars/avatar-04.jpg" alt="Nguyễn Minh Đức" style="width: 36px; height: 36px; border-radius: 50%;" />
+        <div>
+          <div class="stopnav__profile-n">Nguyễn Minh Đức</div>
+          <div class="stopnav__profile-r">Quản trị viên hệ thống</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="sshell__content" style="display: flex; flex: 1; overflow: hidden; height: calc(100vh - 68px);">
+        <!-- SIDEBAR BÊN TRÁI (Thư mục & Tiện ích) -->
+        <aside class="left-sidebar" style="width: 280px; flex-shrink: 0; border-right: 1px solid var(--border-color); background-color: var(--bg-card); padding: 24px 20px; display: flex; flex-direction: column; gap: 28px; overflow-y: auto; height: 100%;">
+            <!-- 1. Cấu trúc tài liệu -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Cấu trúc tài liệu</h3>
+                <div class="folder-tree-container" id="folderTreeContainer"></div>
+            </div>
+
+            <!-- 2. Menu Tiện ích Hệ thống -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Tiện ích hệ thống</h3>
+                <div class="utility-menu">
+                    <!-- Menu Lịch sử hoạt động -->
+                    <div class="menu-item" id="menuItem-history" onclick="switchView('history')">
+                        <div class="menu-item-left">
+                            <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                            <span>Lịch sử hoạt động</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu Thùng rác -->
+                    <div class="menu-item" id="menuItem-trash" onclick="switchView('trash')">
+                        <div class="menu-item-left">
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                            <span>Thùng rác</span>
+                        </div>
+                        <span class="menu-badge" id="sidebarTrashCount">1</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- KHU VỰC HIỂN THỊ NỘI DUNG BÊN PHẢI -->
+        <main class="main-container" style="flex: 1; padding: 32px 40px; overflow-y: auto; height: 100%; background-color: var(--bg-page);">
+            
+            <!-- VIEW 1: DUYỆT FILE/FOLDER -->
+            <div id="view-files" class="content-view active">
+                <!-- Breadcrumbs -->
+                <div class="breadcrumbs" id="breadcrumbsContainer"></div>
+
+                <!-- Card chính -->
+                <div class="main-content-card">
+                    <div class="content-header">
+                        <div class="content-title">
+                            <h1 id="folderMainTitle">Tất cả tài liệu</h1>
+                            <p id="folderSubTitle">Thư mục gốc quản lý tài liệu doanh nghiệp</p>
+                        </div>
+                        
+                        <!-- Dropdown Thêm mới nâng cao -->
+                        <div class="add-new-dropdown-container">
+                            <button class="btn-add-new" id="btnAddNewTrigger" onclick="toggleAddNewDropdown(event)">
+                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                                Thêm mới
+                                <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            
+                            <!-- Menu dropdown -->
+                            <div class="new-action-dropdown" id="addNewDropdown">
+                                <div class="new-dropdown-item" onclick="openUploadFileModal()">
+                                    <i data-lucide="upload" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                    Tải tệp lên
+                                </div>
+                                <div class="new-dropdown-item" onclick="openCreateFolderModal()">
+                                    <i data-lucide="folder-plus" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                    Tạo thư mục mới
+                                </div>
+                                <div class="new-dropdown-item" onclick="openCreateDocModal()">
+                                    <i data-lucide="file-plus-2" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                    Tạo tài liệu mới
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input file ẩn phục vụ upload -->
+                        <input type="file" id="hiddenFileInput" style="display: none;" onchange="handleFileUpload(event)">
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">Tên thư mục con / Tệp</th>
+                                <th style="width: 10%;">Loại</th>
+                                <th style="width: 15%;">Trạng thái</th>
+                                <th style="width: 20%;">Người tạo</th>
+                                <th style="width: 20%;">Cập nhật</th>
+                                <th style="width: 5%; text-align: right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fileTableBody">
+                            <!-- JS render -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW 2: LỊCH SỬ HOẠT ĐỘNG TOÀN DIỆN -->
+            <div id="view-history" class="content-view">
+                <div class="breadcrumbs">
+                    <div class="breadcrumb-item">
+                        <i data-lucide="home" style="width: 14px; height: 14px;"></i>
+                        <span>Trang chủ</span>
+                    </div>
+                    <div class="breadcrumb-separator">/</div>
+                    <div class="breadcrumb-item" style="color: var(--text-main); font-weight: 500;">
+                        <span>Lịch sử hoạt động hệ thống</span>
+                    </div>
+                </div>
+
+                <div class="main-content-card">
+                    <div class="content-header">
+                        <div class="content-title">
+                            <h1>
+                                <i data-lucide="clock" style="width: 24px; height: 24px; color: var(--primary-color);"></i>
+                                Nhật ký hoạt động hệ thống
+                            </h1>
+                            <p>Theo dõi toàn bộ các thao tác chỉnh sửa, thêm mới, xóa và phân quyền tài liệu trong doanh nghiệp</p>
+                        </div>
+                        <button class="btn-action-outline" onclick="clearAllHistoryMock()">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                            Làm mới nhật ký
+                        </button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Người thực hiện</th>
+                                <th style="width: 20%;">Hành động</th>
+                                <th style="width: 35%;">Đối tượng tác động</th>
+                                <th style="width: 20%;">Thời gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- JS render -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW 3: THÙNG RÁC HỆ THỐNG -->
+            <div id="view-trash" class="content-view">
+                <div class="breadcrumbs">
+                    <div class="breadcrumb-item">
+                        <i data-lucide="home" style="width: 14px; height: 14px;"></i>
+                        <span>Trang chủ</span>
+                    </div>
+                    <div class="breadcrumb-separator">/</div>
+                    <div class="breadcrumb-item" style="color: var(--text-main); font-weight: 500;">
+                        <span>Thùng rác hệ thống</span>
+                    </div>
+                </div>
+
+                <div class="main-content-card">
+                    <div class="content-header">
+                        <div class="content-title">
+                            <h1>
+                                <i data-lucide="trash-2" style="width: 24px; height: 24px; color: #ef4444;"></i>
+                                Thùng rác
+                            </h1>
+                            <p>Tài liệu đã xóa nằm ở đây 30 ngày trước khi bị dọn dẹp vĩnh viễn</p>
+                        </div>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 45%;">Tên thư mục con / Tệp</th>
+                                <th style="width: 15%;">Dung lượng</th>
+                                <th style="width: 25%;">Thư mục gốc ban đầu</th>
+                                <th style="width: 15%; text-align: right;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trashTableBody">
+                            <!-- JS render -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+      </div> <!-- Closes .sshell__content -->
+    </div> <!-- Closes .sshell__main -->
+  </div> <!-- Closes .sshell -->
+
+    <!-- MODAL 1: TẠO THƯ MỤC -->
+    <div class="modal-overlay" id="createFolderModalOverlay">
+        <div class="modal-card" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <div class="modal-folder-badge" style="background: var(--primary-gradient);">
+                        <i data-lucide="folder-plus" style="width: 20px; height: 20px;"></i>
+                    </div>
+                    <div class="modal-title">
+                        <h2>Tạo thư mục</h2>
+                        <p>Thêm thư mục mới vào vị trí tùy chọn</p>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeModal('createFolderModalOverlay')">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="newFolderNameInput">Tên thư mục</label>
+                    <input type="text" id="newFolderNameInput" class="form-input" placeholder="Nhập tên thư mục...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thư mục lưu trữ (Bấm để thay đổi)</label>
+                    <div class="path-picker-trigger" id="folderPathPickerTrigger" onclick="togglePathPicker('folder')">
+                        <i data-lucide="folder" style="width: 16px; height: 16px; color: #d97706;"></i>
+                        <span id="folderPathName">/Tài liệu chung</span>
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; margin-left: auto;"></i>
+                    </div>
+                    <div class="path-picker-dropdown" id="folderPathPickerDropdown" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('createFolderModalOverlay')">Hủy</button>
+                <button class="btn-primary" onclick="submitCreateFolder()">Tạo mới</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TẠO TÀI LIỆU -->
+    <div class="modal-overlay" id="createDocModalOverlay">
+        <div class="modal-card" style="max-width: 550px;">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <div class="modal-folder-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                        <i data-lucide="file-plus" style="width: 20px; height: 20px;"></i>
+                    </div>
+                    <div class="modal-title">
+                        <h2>Tạo tài liệu mới</h2>
+                        <p>Nhập văn bản nội dung trực tiếp</p>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeModal('createDocModalOverlay')">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="newDocNameInput">Tên tài liệu (.txt)</label>
+                    <input type="text" id="newDocNameInput" class="form-input" placeholder="tai_lieu_moi.txt">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thư mục lưu trữ (Bấm để thay đổi)</label>
+                    <div class="path-picker-trigger" id="docPathPickerTrigger" onclick="togglePathPicker('doc')">
+                        <i data-lucide="folder" style="width: 16px; height: 16px; color: #d97706;"></i>
+                        <span id="docPathName">/Tài liệu chung</span>
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; margin-left: auto;"></i>
+                    </div>
+                    <div class="path-picker-dropdown" id="docPathPickerDropdown" style="display: none;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newDocContentInput">Nội dung văn bản</label>
+                    <textarea id="newDocContentInput" class="form-textarea" placeholder="Nhập nội dung tài liệu ở đây..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('createDocModalOverlay')">Hủy</button>
+                <button class="btn-primary" onclick="submitCreateDoc()">Lưu tài liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TẢI TỆP LÊN -->
+    <div class="modal-overlay" id="uploadFileModalOverlay">
+        <div class="modal-card" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <div class="modal-folder-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i data-lucide="upload" style="width: 20px; height: 20px;"></i>
+                    </div>
+                    <div class="modal-title">
+                        <h2>Tải tệp lên</h2>
+                        <p>Chọn tệp tin từ máy tính và vị trí lưu trữ</p>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeModal('uploadFileModalOverlay')">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Chọn tệp tin</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-action-outline" onclick="triggerFileSelect()">
+                            <i data-lucide="file" style="width: 14px; height: 14px;"></i>
+                            Chọn tệp...
+                        </button>
+                        <span id="selectedFileNameDisplay" style="font-size: 13px; color: var(--text-muted); font-style: italic;">Chưa chọn tệp nào</span>
+                    </div>
+                    <input type="file" id="modalFileInput" style="display: none;" onchange="handleModalFileSelect(event)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thư mục lưu trữ (Bấm để thay đổi)</label>
+                    <div class="path-picker-trigger" id="uploadPathPickerTrigger" onclick="togglePathPicker('upload')">
+                        <i data-lucide="folder" style="width: 16px; height: 16px; color: #d97706;"></i>
+                        <span id="uploadPathName">/Tài liệu chung</span>
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; margin-left: auto;"></i>
+                    </div>
+                    <div class="path-picker-dropdown" id="uploadPathPickerDropdown" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('uploadFileModalOverlay')">Hủy</button>
+                <button class="btn-primary" id="btnConfirmUpload" onclick="submitFileUpload()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);" disabled>Tải lên</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: PHÂN QUYỀN (ĐÃ CẬP NHẬT CẤU TRÚC 3 CHẾ ĐỘ) -->
+    <div class="modal-overlay" id="shareModalOverlay">
+        <div class="modal-card">
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <div class="modal-folder-badge" id="modalTargetIcon">
+                        <i data-lucide="folder" style="width: 20px; height: 20px;"></i>
+                    </div>
+                    <div class="modal-title">
+                        <h2 id="modalTargetTitle">Phân quyền Thư mục</h2>
+                        <p id="modalTargetSubtitle">/Tài liệu chung/...</p>
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeShareModal()">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                <!-- Note kế thừa quyền -->
+                <div id="inheritNoteContainer" style="display: none; background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.5; margin-bottom: 10px; font-weight: 500;">
+                    <span id="inheritNoteText">Quyền truy cập của tệp/thư mục này được kế thừa từ thư mục mẹ. Bạn không thể chỉnh sửa trực tiếp.</span>
+                </div>
+
+                <!-- 1. Kế thừa quyền từ thư mục mẹ -->
+                <div class="inherit-card">
+                    <div class="inherit-info">
+                        <span class="inherit-title">Kế thừa quyền từ thư mục mẹ</span>
+                        <span class="inherit-desc">Thư mục con sẽ kế thừa các quyền được cài đặt từ thư mục mẹ.</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="inheritToggle" checked onchange="toggleInheritance()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- 2. Chọn phạm vi/chế độ phân quyền (Chỉ hiển thị khi tắt kế thừa) -->
+                <div class="form-group" id="scopeContainer" style="display: none;">
+                    <label class="form-label" for="scopeSelect">Phạm vi truy cập</label>
+                    <select id="scopeSelect" class="form-input" style="background: white;" onchange="changeScope(this.value)">
+                        <option value="PRIVATE">🔒 Riêng tư (Chỉ mình tôi và admin tổng)</option>
+                        <option value="RESTRICTED">👥 Giới hạn (Chỉ các thành viên được gán quyền cụ thể)</option>
+                        <option value="PUBLIC">🌐 Công khai (Toàn bộ nhân sự trong công ty)</option>
+                    </select>
+                </div>
+
+                <!-- 3. Thêm thành viên (Chỉ hiển thị ở chế độ GIỚI HẠN) -->
+                <div class="add-member-section" id="addMemberSection" style="display: none;">
+                    <span class="section-label" style="font-size: 11px; margin-bottom: 6px; display: block;">Thêm thành viên / Vai trò mới</span>
+                    <div class="search-add-container">
+                        <!-- Tìm theo phân loại -->
+                        <select id="searchTypeSelect" class="form-input" style="width: 120px; background: white; flex-shrink: 0; padding: 10px 8px; font-size: 13px;" onchange="filterDropdown()">
+                            <option value="ALL">🔍 Tất cả</option>
+                            <option value="BRANCH">🏢 Chi nhánh</option>
+                            <option value="DEPT">📂 Phòng ban</option>
+                            <option value="GROUP">👥 Nhóm</option>
+                            <option value="USER">👤 Thành viên</option>
+                            <option value="ROLE">🎓 Vai trò</option>
+                        </select>
+
+                        <div class="search-wrapper">
+                            <i data-lucide="search" class="search-icon-inside" style="width: 14px; height: 14px;"></i>
+                            <input type="text" 
+                                   id="memberSearchInput" 
+                                   class="search-input-box" 
+                                   placeholder="Chọn để thêm nhanh..." 
+                                   onfocus="showDropdown()" 
+                                   onkeyup="filterDropdown()">
+                            
+                            <!-- Dropdown gợi ý -->
+                            <div class="autocomplete-dropdown" id="searchDropdown"></div>
+                        </div>
+
+                        <!-- Cấp quyền: Chỉ xem vs Chỉnh sửa -->
+                        <select id="newPermissionSelect" class="permission-select" style="flex-shrink: 0;">
+                            <option value="VIEW">Chỉ xem</option>
+                            <option value="EDIT">Chỉnh sửa</option>
+                        </select>
+
+                        <button id="btnAddMember" class="btn-add-member" onclick="addNewPermission()" disabled style="flex-shrink: 0;">Thêm</button>
+                    </div>
+                    <!-- Danh sách các mục đã chọn để thêm nhanh -->
+                    <div id="selectedTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+                </div>
+
+                <!-- 4. Cấu hình Quyền Công khai (Chỉ hiển thị ở chế độ CÔNG KHAI) -->
+                <div class="form-group" id="publicRoleContainer" style="display: none; background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md);">
+                    <label class="form-label" for="publicRoleSelect">Quyền mặc định của toàn bộ nhân sự</label>
+                    <select id="publicRoleSelect" class="form-input" style="background: white;" onchange="changePublicRole(this.value)">
+                        <option value="VIEW">👁️ Chỉ xem (Mọi người có thể xem và tải về)</option>
+                        <option value="EDIT">✏️ Chỉnh sửa (Mọi người có quyền thêm mới, chỉnh sửa, xóa tệp)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Danh sách đã phân quyền -->
+                <div class="members-list-wrapper">
+                    <span class="section-label" style="font-size: 11px; margin-bottom: 6px; display: block;">Danh sách quyền truy cập thực tế</span>
+                    <div class="members-list-container" id="membersListContainer"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeShareModal()">Hủy</button>
+                <button class="btn-primary" onclick="savePermissions()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: PREVIEW FILE -->
+    <div class="preview-overlay" id="filePreviewOverlay">
+        <div class="preview-card">
+            <div class="preview-header">
+                <div class="preview-file-info">
+                    <div class="file-icon document" id="previewFileIcon">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 15px; font-weight: 700;" id="previewFileName">Tên file.docx</h3>
+                        <p style="font-size: 11px; color: var(--text-muted);" id="previewFileMeta">250 KB | Cập nhật bởi Trần Bình</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;" id="previewHeaderRight">
+                    <button class="btn-action-outline" onclick="showToast('Bắt đầu tải xuống tệp...')">
+                        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                        Tải xuống
+                    </button>
+                    <button class="btn-close" onclick="closeFilePreview()">
+                        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-body">
+                <div class="document-paper">
+                    <div class="doc-title" id="previewPaperTitle">Tên tài liệu demo</div>
+                    <div class="doc-meta">
+                        <span>Hệ thống ERP Portal</span>
+                        <span>Ngày tạo: 2026-06-22</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+                        <div id="previewTextContentFiller" class="doc-paragraph">
+                            Nội dung chi tiết tài liệu hiển thị ở đây.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="notificationToast">
+        <i data-lucide="info" style="width: 16px; height: 16px; color: #10b981;"></i>
+        <span id="toastMessage">Thông báo thành công!</span>
+    </div>
+
+    <!-- Global Action Dropdown -->
+    <div class="action-dropdown" id="globalActionDropdown"></div>
+
+    <!-- JS Logic -->
+    <script>
+        // Khởi động hệ thống
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDefaultPermissions();
+            lucide.createIcons();
+            selectFolder('accounting');
+            updateTrashBadges();
+            
+            // Close dropdown when scrolling main container
+            const mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                mainContainer.addEventListener('scroll', closeAllDropdowns);
+            }
+        });
+
+        // 1. Cấu trúc thư mục cây và file dạng lồng nhau
+        const directories = {
+            'root': {
+                id: 'root',
+                name: "Tất cả tài liệu",
+                parentId: null,
+                subfolders: ['accounting', 'hr', 'marketing'],
+                files: []
+            },
+            'accounting': {
+                id: 'accounting',
+                name: "Phòng Kế toán",
+                parentId: 'root',
+                subfolders: ['reports', 'vouchers'],
+                files: [
+                    { id: 'file-2', name: "Hợp đồng mua bán thiết bị.pdf", type: "document", isPublic: false, updatedTime: "Hôm qua", author: "Nguyễn Đức", size: "2.4 MB", content: "Nội dung giả lập của tài liệu PDF hợp đồng kinh tế mua bán thiết bị văn phòng năm 2026 giữa hai bên..." },
+                    { id: 'file-3', name: "Quy chuẩn thu chi nội bộ.docx", type: "document", isPublic: true, updatedTime: "3 ngày trước", author: "Lê Giang", size: "180 KB", content: "Nội dung quy trình hướng dẫn thanh toán tạm ứng, hoàn ứng và hồ sơ chứng từ thanh toán của phòng kế toán..." }
+                ]
+            },
+            'reports': {
+                id: 'reports',
+                name: "Báo cáo năm 2026",
+                parentId: 'accounting',
+                subfolders: ['internal-reports'],
+                files: [
+                    { id: 'file-4', name: "Báo cáo doanh số Q1.xlsx", type: "document", isPublic: true, updatedTime: "5 giờ trước", author: "Trần Bình", size: "1.2 MB", content: "Bảng tính chi tiết báo cáo doanh thu bán hàng quý 1 năm 2026 của tất cả các chi nhánh trên toàn quốc..." },
+                    { id: 'file-5', name: "Dự chi ngân sách Q2.xlsx", type: "document", isPublic: false, updatedTime: "2 ngày trước", author: "Trần Bình", size: "950 KB", content: "Số liệu kế hoạch chi tiêu dự toán ngân sách hoạt động quảng cáo truyền thông quý 2 năm 2026..." }
+                ]
+            },
+            'internal-reports': {
+                id: 'internal-reports',
+                name: "Báo cáo nội bộ bộ phận",
+                parentId: 'reports',
+                subfolders: [],
+                files: [
+                    { id: 'file-11', name: "Đánh giá hiệu suất nhân sự kế toán Q1.pdf", type: "document", isPublic: false, updatedTime: "4 ngày trước", author: "Trần Bình", size: "520 KB", content: "Báo cáo tổng kết chất lượng công việc, KPI của nhân sự kế toán phòng ban quý 1..." }
+                ]
+            },
+            'vouchers': {
+                id: 'vouchers',
+                name: "Chứng từ chi",
+                parentId: 'accounting',
+                subfolders: [],
+                files: [
+                    { id: 'file-6', name: "Hóa đơn dịch vụ đám mây Q1.pdf", type: "document", isPublic: true, updatedTime: "1 tuần trước", author: "Lê Giang", size: "4.1 MB", content: "Chi tiết hóa đơn GTGT thanh toán tiền thuê hạ tầng máy chủ Cloud Server quý 1..." }
+                ]
+            },
+            'hr': {
+                id: 'hr',
+                name: "Phòng Nhân sự",
+                parentId: 'root',
+                subfolders: ['recruitment'],
+                files: [
+                    { id: 'file-8', name: "Quy chế làm việc 2026.pdf", type: "document", isPublic: true, updatedTime: "1 tuần trước", author: "Quản trị viên", size: "850 KB", content: "Văn bản nội bộ quy định về giờ giấc làm việc, trang phục công sở và quy chế kỷ luật lao động năm 2026..." }
+                ]
+            },
+            'recruitment': {
+                id: 'recruitment',
+                name: "Hồ sơ tuyển dụng",
+                parentId: 'hr',
+                subfolders: [],
+                files: [
+                    { id: 'file-7', name: "CV Ứng viên tiềm năng.pdf", type: "document", isPublic: false, updatedTime: "3 giờ trước", author: "Hoàng Oanh", size: "1.5 MB", content: "CV xin việc của ứng viên nộp cho phòng Nhân sự tuyển dụng..." }
+                ]
+            },
+            'marketing': {
+                id: 'marketing',
+                name: "Phòng Marketing",
+                parentId: 'root',
+                subfolders: ['campaigns'],
+                files: [
+                    { id: 'file-10', name: "Hình ảnh banner sự kiện.png", type: "document", isPublic: true, updatedTime: "2 giờ trước", author: "Phạm Đức", size: "5.6 MB", content: "Hình ảnh thiết kế poster, banner chiến dịch hè..." }
+                ]
+            },
+            'campaigns': {
+                id: 'campaigns',
+                name: "Chiến dịch hè 2026",
+                parentId: 'marketing',
+                subfolders: [],
+                files: [
+                    { id: 'file-9', name: "Kịch bản video giới thiệu sản phẩm.docx", type: "document", isPublic: true, updatedTime: "5 phút trước", author: "Phạm Đức", size: "120 KB", content: "Kịch bản video giới thiệu sản phẩm..." }
+                ]
+            }
+        };
+
+        const collapsedFolders = new Set(['internal-reports', 'recruitment', 'campaigns']);
+        let currentActiveFolder = 'accounting';
+
+        // Lịch sử & Thùng rác mock DB
+        const db = {
+            history: [
+                { id: 1, user: "Nguyễn Minh Đức", action: "ACCESS", actionLabel: "Mở hệ thống", target: "DMS Explorer", time: "Vừa xong" },
+                { id: 2, user: "Trần Thị Bình", action: "VIEW", actionLabel: "Xem trước", target: "Báo cáo doanh số Q1.xlsx", time: "5 phút trước" }
+            ],
+            trash: [
+                { id: 'trash-1', name: "Bản nháp kế hoạch cũ.docx", type: "document", size: "45 KB", originalFolder: "accounting", originalFolderName: "Phòng Kế toán" }
+            ]
+        };
+
+        // Danh sách gán quyền
+        const availableSubjects = [
+            // Chi nhánh
+            { id: 'b1', name: 'Chi nhánh Hà Nội', type: 'BRANCH', sub: 'Trụ sở chính', avatarCode: 'HN' },
+            { id: 'b2', name: 'Chi nhánh TP.HCM', type: 'BRANCH', sub: 'Văn phòng miền Nam', avatarCode: 'SG' },
+            { id: 'b3', name: 'Chi nhánh Đà Nẵng', type: 'BRANCH', sub: 'Văn phòng miền Trung', avatarCode: 'ĐN' },
+            
+            // Phòng ban
+            { id: 'd1', name: 'Phòng Kế toán', type: 'DEPT', sub: 'Bộ phận tài chính kế toán', avatarCode: 'KT' },
+            { id: 'd2', name: 'Phòng Nhân sự', type: 'DEPT', sub: 'Hành chính nhân sự', avatarCode: 'NS' },
+            { id: 'd3', name: 'Phòng Marketing', type: 'DEPT', sub: 'Quảng cáo & truyền thông', avatarCode: 'MK' },
+            { id: 'd4', name: 'Phòng Công nghệ', type: 'DEPT', sub: 'Phát triển phần mềm & IT', avatarCode: 'IT' },
+
+            // Nhóm
+            { id: 'g1', name: 'Ban Giám đốc', type: 'GROUP', sub: 'Ban Lãnh đạo', avatarCode: 'BGĐ' },
+            { id: 'g2', name: 'Nhóm Dự án ERP', type: 'GROUP', sub: 'Nhóm dự án trọng điểm', avatarCode: 'DA' },
+            { id: 'g3', name: 'Nhóm Hỗ trợ kỹ thuật', type: 'GROUP', sub: 'Support Team', avatarCode: 'SP' },
+
+            // Thành viên
+            { id: 'u1', name: 'Nguyễn Văn An', type: 'USER', sub: 'an.nv@company.com', avatarCode: 'AN' },
+            { id: 'u2', name: 'Trần Thị Bình', type: 'USER', sub: 'binh.tt@company.com', avatarCode: 'BÌ' },
+            { id: 'u3', name: 'Lê Hoàng Giang', type: 'USER', sub: 'giang.lh@company.com', avatarCode: 'GI' },
+            { id: 'u4', name: 'Phạm Minh Hoàng', type: 'USER', sub: 'hoang.pm@company.com', avatarCode: 'HO' },
+            { id: 'u5', name: 'Đỗ Thị Mai', type: 'USER', sub: 'mai.dt@company.com', avatarCode: 'MA' },
+
+            // Vai trò
+            { id: 'r1', name: 'Quản trị tài liệu (DMS Admin)', type: 'ROLE', sub: 'Quản trị chuyên môn tài liệu', avatarCode: 'QA' },
+            { id: 'r2', name: 'Kiểm toán viên (Auditor)', type: 'ROLE', sub: 'Quyền kiểm tra giám sát', avatarCode: 'AU' },
+            { id: 'r3', name: 'Nhân viên thử việc (Trainee)', type: 'ROLE', sub: 'Quyền hạn chế', avatarCode: 'TR' }
+        ];
+
+        let selectedSubjectsForAdding = [];
+
+        // Biến lưu trạng thái Modal Phân quyền đang thao tác
+        const defaultInheritedPermissions = [
+            { id: 'g1', name: 'Ban Giám đốc', type: 'GROUP', permission: 'EDIT', isInherited: true, sub: 'Ban Lãnh đạo', avatarCode: 'BGĐ' },
+            { id: 'u3', name: 'Lê Hoàng Giang', type: 'USER', permission: 'VIEW', isInherited: true, sub: 'giang.lh@company.com', avatarCode: 'GI' }
+        ];
+
+        let currentPermissions = [];
+        let activeTargetId = '';
+        let activeTargetType = '';
+        let activeTargetName = '';
+        let selectedSubject = null;
+        let popupScope = 'RESTRICTED'; // PRIVATE, RESTRICTED, PUBLIC
+        let popupPublicRole = 'VIEW'; // VIEW, EDIT
+        let editingFileId = null;
+        let editingFolderId = null;
+
+        // --- HELPER FUNCTIONS FOR PERMISSIONS ---
+        function findFileById(fileId) {
+            for (const folderId in directories) {
+                const folder = directories[folderId];
+                const file = folder.files.find(f => f.id === fileId);
+                if (file) return file;
+            }
+            return null;
+        }
+
+        function findFileParentFolderId(fileId) {
+            for (const folderId in directories) {
+                const folder = directories[folderId];
+                const file = folder.files.find(f => f.id === fileId);
+                if (file) return folderId;
+            }
+            return null;
+        }
+
+        function getItem(itemId, targetType) {
+            if (targetType === 'folder') {
+                return directories[itemId];
+            } else {
+                return findFileById(itemId);
+            }
+        }
+
+        function getParentFolderId(itemId, targetType) {
+            if (targetType === 'folder') {
+                const folder = directories[itemId];
+                return folder ? folder.parentId : null;
+            } else {
+                return findFileParentFolderId(itemId);
+            }
+        }
+
+        function getEffectivePermissions(itemId, targetType) {
+            const item = getItem(itemId, targetType);
+            if (!item) {
+                return { isInheriting: false, permissionScope: 'RESTRICTED', permissions: [], publicRole: 'VIEW' };
+            }
+
+            const parentFolderId = getParentFolderId(itemId, targetType);
+
+            if (item.isInheriting && parentFolderId) {
+                const parentEff = getEffectivePermissions(parentFolderId, 'folder');
+                return {
+                    isInheriting: true,
+                    permissionScope: parentEff.permissionScope,
+                    publicRole: parentEff.publicRole,
+                    permissions: parentEff.permissions.map(p => ({ ...p, isInherited: true }))
+                };
+            }
+
+            return {
+                isInheriting: !!item.isInheriting,
+                permissionScope: item.permissionScope || 'RESTRICTED',
+                publicRole: item.publicRole || 'VIEW',
+                permissions: (item.permissions || []).map(p => ({ ...p, isInherited: false }))
+            };
+        }
+
+        function getStatusBadgeHtml(eff) {
+            if (eff.permissionScope === 'PRIVATE') {
+                return `<span class="badge badge-private"><i data-lucide="lock" style="width: 10px; height: 10px; margin-right: 3px;"></i>Riêng tư</span>`;
+            } else if (eff.permissionScope === 'PUBLIC') {
+                const roleText = eff.publicRole === 'EDIT' ? 'Chỉnh sửa' : 'Chỉ xem';
+                return `<span class="badge badge-public"><i data-lucide="globe" style="width: 10px; height: 10px; margin-right: 3px;"></i>Công khai - ${roleText}</span>`;
+            } else {
+                return `<span class="badge badge-restricted"><i data-lucide="users" style="width: 10px; height: 10px; margin-right: 3px;"></i>Giới hạn</span>`;
+            }
+        }
+
+        function initializeDefaultPermissions() {
+            // Root Setup
+            if (!directories['root'].permissions) {
+                directories['root'].isInheriting = false;
+                directories['root'].permissionScope = 'PUBLIC';
+                directories['root'].publicRole = 'VIEW';
+                directories['root'].permissions = [
+                    { id: 'g1', name: 'Ban Giám đốc', type: 'GROUP', permission: 'EDIT', isInherited: false, sub: 'Ban Lãnh đạo', avatarCode: 'BGĐ' },
+                    { id: 'u3', name: 'Lê Hoàng Giang', type: 'USER', permission: 'VIEW', isInherited: false, sub: 'giang.lh@company.com', avatarCode: 'GI' }
+                ];
+            }
+
+            // Loop through all folders
+            for (const key in directories) {
+                const folder = directories[key];
+                if (key === 'root') continue;
+
+                if (folder.author === undefined) {
+                    folder.author = "Quản trị viên";
+                }
+                if (folder.createdTime === undefined) {
+                    folder.createdTime = "12:00 20/06/2026";
+                }
+                if (folder.updatedTime === undefined) {
+                    folder.updatedTime = "12:00 20/06/2026";
+                }
+                if (folder.updatedBy === undefined) {
+                    folder.updatedBy = "Quản trị viên";
+                }
+
+                if (folder.isInheriting === undefined) {
+                    if (folder.parentId === 'root' || folder.parentId === null) {
+                        // Level-1 folders
+                        folder.isInheriting = false;
+                        if (key === 'accounting') {
+                            folder.permissionScope = 'RESTRICTED';
+                            folder.publicRole = 'VIEW';
+                            folder.permissions = [
+                                { id: 'd1', name: 'Phòng Kế toán', type: 'DEPT', permission: 'EDIT', isInherited: false, sub: 'Bộ phận tài chính kế toán', avatarCode: 'KT' },
+                                { id: 'u2', name: 'Trần Thị Bình', type: 'USER', permission: 'VIEW', isInherited: false, sub: 'binh.tt@company.com', avatarCode: 'BÌ' }
+                            ];
+                        } else if (key === 'hr') {
+                            folder.permissionScope = 'RESTRICTED';
+                            folder.publicRole = 'VIEW';
+                            folder.permissions = [
+                                { id: 'd2', name: 'Phòng Nhân sự', type: 'DEPT', permission: 'EDIT', isInherited: false, sub: 'Hành chính nhân sự', avatarCode: 'NS' },
+                                { id: 'u5', name: 'Đỗ Thị Mai', type: 'USER', permission: 'VIEW', isInherited: false, sub: 'mai.dt@company.com', avatarCode: 'MA' }
+                            ];
+                        } else if (key === 'marketing') {
+                            folder.permissionScope = 'PUBLIC';
+                            folder.publicRole = 'VIEW';
+                            folder.permissions = [];
+                        } else {
+                            folder.permissionScope = 'PRIVATE';
+                            folder.publicRole = 'VIEW';
+                            folder.permissions = [];
+                        }
+                    } else {
+                        // Level-2+ folders: MUST inherit from parent!
+                        folder.isInheriting = true;
+                        folder.permissionScope = 'RESTRICTED';
+                        folder.publicRole = 'VIEW';
+                        folder.permissions = [];
+                    }
+                }
+
+                // Loop files
+                folder.files.forEach(file => {
+                    if (file.isUploaded === undefined) {
+                        file.isUploaded = true;
+                    }
+
+                    if (file.author === undefined) {
+                        file.author = "Quản trị viên";
+                    }
+                    if (file.createdTime === undefined) {
+                        file.createdTime = "12:00 20/06/2026";
+                    }
+                    if (file.updatedTime === undefined) {
+                        file.updatedTime = "12:00 20/06/2026";
+                    }
+                    if (file.updatedBy === undefined) {
+                        file.updatedBy = file.author;
+                    }
+
+                    if (file.isInheriting === undefined) {
+                        if (folder.id === 'root') {
+                            // File in root is Level-1
+                            file.isInheriting = false;
+                            file.permissionScope = 'PRIVATE';
+                            file.publicRole = 'VIEW';
+                            file.permissions = [];
+                        } else {
+                            // File inside any subfolder is Level-2+ and MUST inherit!
+                            file.isInheriting = true;
+                            file.permissionScope = 'RESTRICTED';
+                            file.publicRole = 'VIEW';
+                            file.permissions = [];
+                        }
+                    }
+                });
+            }
+        }
+
+        // Tắt/mở menu Thêm mới
+        function toggleAddNewDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('addNewDropdown').classList.toggle('show');
+        }
+
+        window.addEventListener('click', () => {
+            document.getElementById('addNewDropdown').classList.remove('show');
+        });
+
+        // --- PATH PICKER STATE & FUNCTIONS ---
+        let selectedPickerFolders = {
+            upload: '',
+            folder: '',
+            doc: ''
+        };
+        let createFolderMode = 'child'; // 'sibling' or 'child'
+        let selectedUploadFile = null;
+
+        function getCurrentDateTimeString() {
+            const now = new Date();
+            const time = now.toTimeString().substring(0, 5);
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            return `${time} ${day}/${month}/${year}`;
+        }
+
+        function getFolderPathName(folderId) {
+            if (folderId === 'root') return '/Tất cả tài liệu';
+            const path = [];
+            let current = directories[folderId];
+            while (current) {
+                if (current.id !== 'root') {
+                    path.unshift(current.name);
+                }
+                current = directories[current.parentId];
+            }
+            return '/Tất cả tài liệu/' + (path.join('/'));
+        }
+
+        function getFolderListWithPaths() {
+            const list = [];
+            function traverse(folderId, currentPath, depth) {
+                if (editingFolderId && folderId === editingFolderId) return;
+                const folder = directories[folderId];
+                if (!folder) return;
+                const path = folderId === 'root' ? '/Tất cả tài liệu' : currentPath + '/' + folder.name;
+                list.push({
+                    id: folderId,
+                    name: folder.name,
+                    fullPath: path,
+                    depth: depth
+                });
+                folder.subfolders.forEach(subId => {
+                    traverse(subId, path, depth + 1);
+                });
+            }
+            traverse('root', '', 0);
+            return list;
+        }
+
+        function renderPathPicker(modalType, activeFolderId) {
+            const dropdown = document.getElementById(`${modalType}PathPickerDropdown`);
+            if (!dropdown) return;
+            dropdown.innerHTML = '';
+            
+            const folderList = getFolderListWithPaths();
+            folderList.forEach(folder => {
+                const item = document.createElement('div');
+                item.className = 'path-picker-item';
+                if (folder.id === activeFolderId) {
+                    item.classList.add('active');
+                }
+                
+                const indent = '&nbsp;&nbsp;&nbsp;&nbsp;'.repeat(folder.depth);
+                const prefix = folder.depth > 0 ? '└─ ' : '';
+                
+                item.innerHTML = `
+                    <span>${indent}${prefix}</span>
+                    <i data-lucide="folder" style="width: 14px; height: 14px; color: #d97706; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                    <span style="font-weight: inherit;">${folder.name}</span>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectPickerFolder(modalType, folder.id, folder.fullPath);
+                });
+                dropdown.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        function selectPickerFolder(modalType, folderId, fullPath) {
+            selectedPickerFolders[modalType] = folderId;
+            const nameEl = document.getElementById(`${modalType}PathName`);
+            if (nameEl) {
+                nameEl.textContent = fullPath;
+            }
+            const dropdown = document.getElementById(`${modalType}PathPickerDropdown`);
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function togglePathPicker(modalType) {
+            const dropdown = document.getElementById(`${modalType}PathPickerDropdown`);
+            if (!dropdown) return;
+            
+            const isShown = dropdown.style.display === 'block';
+            
+            // Close other path pickers
+            document.querySelectorAll('.path-picker-dropdown').forEach(d => d.style.display = 'none');
+            
+            if (!isShown) {
+                dropdown.style.display = 'block';
+                renderPathPicker(modalType, selectedPickerFolders[modalType]);
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Open Upload Modal
+        function openUploadFileModal() {
+            selectedUploadFile = null;
+            document.getElementById('selectedFileNameDisplay').textContent = "Chưa chọn tệp nào";
+            document.getElementById('btnConfirmUpload').disabled = true;
+            document.getElementById('modalFileInput').value = '';
+
+            const folderPath = getFolderPathName(currentActiveFolder);
+            selectPickerFolder('upload', currentActiveFolder, folderPath);
+
+            document.getElementById('uploadFileModalOverlay').classList.add('open');
+        }
+
+        function triggerFileSelect() {
+            document.getElementById('modalFileInput').click();
+        }
+
+        function handleModalFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            selectedUploadFile = file;
+            document.getElementById('selectedFileNameDisplay').textContent = file.name;
+            document.getElementById('btnConfirmUpload').disabled = false;
+        }
+
+        function submitFileUpload() {
+            if (!selectedUploadFile) return;
+            const targetFolderId = selectedPickerFolders['upload'] || currentActiveFolder;
+            const targetFolder = directories[targetFolderId];
+            if (!targetFolder) return;
+
+            const newFileObj = {
+                id: `file-${Date.now()}`,
+                name: selectedUploadFile.name,
+                type: "document",
+                isPublic: false,
+                updatedTime: "Vừa xong",
+                author: "Nguyễn Minh Đức",
+                size: formatBytes(selectedUploadFile.size),
+                content: `Nội dung tệp tải lên giả lập: ${selectedUploadFile.name}`,
+                isInheriting: targetFolderId !== 'root',
+                permissionScope: targetFolderId === 'root' ? 'PRIVATE' : 'RESTRICTED',
+                publicRole: 'VIEW',
+                permissions: [],
+                isUploaded: true
+            };
+
+            targetFolder.files.push(newFileObj);
+            logActivity('Nguyễn Minh Đức', 'CREATE', 'Tải lên tài liệu', selectedUploadFile.name);
+            showToast(`Đã tải lên tệp '${selectedUploadFile.name}' vào '${targetFolder.name}'!`);
+            
+            closeModal('uploadFileModalOverlay');
+            selectFolder(targetFolderId);
+        }
+
+        // Modal Tạo thư mục
+        function openCreateFolderModal() {
+            editingFolderId = null;
+
+            const modal = document.getElementById('createFolderModalOverlay');
+            const titleEl = modal.querySelector('h2');
+            const subtitleEl = modal.querySelector('.modal-title p');
+            const saveBtn = modal.querySelector('.modal-footer .btn-primary');
+
+            titleEl.textContent = "Tạo thư mục";
+            subtitleEl.textContent = "Thêm thư mục mới vào vị trí tùy chọn";
+            saveBtn.textContent = "Tạo mới";
+            saveBtn.onclick = submitCreateFolder;
+
+            const folderPath = getFolderPathName(currentActiveFolder);
+            selectPickerFolder('folder', currentActiveFolder, folderPath);
+            
+            document.getElementById('newFolderNameInput').value = '';
+            modal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function submitCreateFolder() {
+            const folderName = document.getElementById('newFolderNameInput').value.trim();
+            if (!folderName) {
+                alert("Vui lòng nhập tên thư mục!");
+                return;
+            }
+
+            const targetParentId = selectedPickerFolders['folder'] || currentActiveFolder;
+            const targetParent = directories[targetParentId];
+            if (!targetParent) return;
+
+            const newId = `folder-${Date.now()}`;
+            directories[newId] = {
+                id: newId,
+                name: folderName,
+                parentId: targetParentId,
+                subfolders: [],
+                files: [],
+                isInheriting: targetParentId !== 'root',
+                permissionScope: targetParentId === 'root' ? 'PRIVATE' : 'RESTRICTED',
+                publicRole: 'VIEW',
+                permissions: []
+            };
+
+            targetParent.subfolders.push(newId);
+            logActivity('Nguyễn Minh Đức', 'CREATE', 'Tạo thư mục mới', folderName);
+            showToast(`Đã tạo thành công thư mục '${folderName}' bên trong '${targetParent.name}'!`);
+            
+            closeModal('createFolderModalOverlay');
+            selectFolder(targetParentId);
+            renderFolderTree();
+        }
+
+        function openEditFolderModal(folderId) {
+            const folder = directories[folderId];
+            if (!folder) return;
+
+            editingFolderId = folderId;
+
+            const modal = document.getElementById('createFolderModalOverlay');
+            const titleEl = modal.querySelector('h2');
+            const subtitleEl = modal.querySelector('.modal-title p');
+            const nameInput = document.getElementById('newFolderNameInput');
+            const saveBtn = modal.querySelector('.modal-footer .btn-primary');
+
+            titleEl.textContent = "Chỉnh sửa thư mục";
+            subtitleEl.textContent = "Sửa đổi tên và vị trí lưu trữ thư mục";
+            nameInput.value = folder.name;
+            saveBtn.textContent = "Lưu thay đổi";
+            saveBtn.onclick = submitEditFolder;
+
+            // Initialize path picker with current parent folder ID
+            const parentId = folder.parentId || 'root';
+            const parentPath = getFolderPathName(parentId);
+            selectPickerFolder('folder', parentId, parentPath);
+
+            modal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function submitEditFolder() {
+            if (!editingFolderId) return;
+            const folder = directories[editingFolderId];
+            if (!folder) return;
+
+            const nameVal = document.getElementById('newFolderNameInput').value.trim();
+            if (!nameVal) {
+                alert("Vui lòng nhập tên thư mục!");
+                return;
+            }
+
+            const targetParentId = selectedPickerFolders['folder'] || 'root';
+
+            // Check if name already exists in target parent folder (excluding this folder itself)
+            const parentFolder = directories[targetParentId];
+            if (parentFolder) {
+                const nameExists = parentFolder.subfolders.some(subId => {
+                    if (subId === editingFolderId) return false;
+                    const sub = directories[subId];
+                    return sub && sub.name.toLowerCase() === nameVal.toLowerCase();
+                });
+                if (nameExists) {
+                    alert(`Thư mục '${nameVal}' đã tồn tại trong thư mục đích!`);
+                    return;
+                }
+            }
+
+            const oldName = folder.name;
+            const oldParentId = folder.parentId;
+
+            // Update folder name
+            folder.name = nameVal;
+
+            // If parent folder changed, move it
+            if (oldParentId !== targetParentId) {
+                // Remove from old parent
+                if (oldParentId && directories[oldParentId]) {
+                    directories[oldParentId].subfolders = directories[oldParentId].subfolders.filter(subId => subId !== editingFolderId);
+                }
+                // Add to new parent
+                if (directories[targetParentId]) {
+                    directories[targetParentId].subfolders.push(editingFolderId);
+                }
+                folder.parentId = targetParentId;
+
+                // Cập nhật lại kế thừa quyền khi di chuyển thư mục
+                const isInheritVal = targetParentId !== 'root';
+                folder.isInheriting = isInheritVal;
+                if (!isInheritVal) {
+                    folder.permissionScope = 'PRIVATE';
+                    folder.permissions = [];
+                }
+            }
+
+            logActivity('Nguyễn Minh Đức', 'EDIT', 'Chỉnh sửa thư mục', `${oldName} -> ${nameVal}`);
+            showToast(`Đã lưu thay đổi cho thư mục '${nameVal}'!`);
+
+            closeModal('createFolderModalOverlay');
+            editingFolderId = null;
+            
+            // Re-render and select current folder
+            selectFolder(targetParentId);
+        }
+
+        // Modal Tạo tài liệu
+        function openCreateDocModal() {
+            editingFileId = null;
+
+            const modal = document.getElementById('createDocModalOverlay');
+            const titleEl = modal.querySelector('h2');
+            const subtitleEl = modal.querySelector('.modal-title p');
+            const nameInput = document.getElementById('newDocNameInput');
+            const nameLabel = modal.querySelector('label[for="newDocNameInput"]');
+            const contentInput = document.getElementById('newDocContentInput');
+            const contentGroup = contentInput.parentElement;
+            const saveBtn = modal.querySelector('.modal-footer .btn-primary');
+
+            titleEl.textContent = "Tạo tài liệu mới";
+            subtitleEl.textContent = "Nhập văn bản nội dung trực tiếp";
+            nameLabel.textContent = "Tên tài liệu (.txt)";
+            nameInput.value = '';
+            contentInput.value = '';
+            contentGroup.style.display = 'block';
+            saveBtn.textContent = "Lưu tài liệu";
+            saveBtn.onclick = submitCreateDoc;
+
+            // Hiện thanh chọn thư mục lưu trữ
+            document.getElementById('docPathPickerTrigger').parentElement.style.display = 'block';
+
+            const folderPath = getFolderPathName(currentActiveFolder);
+            selectPickerFolder('doc', currentActiveFolder, folderPath);
+
+            modal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function submitCreateDoc() {
+            let docName = document.getElementById('newDocNameInput').value.trim();
+            const docContent = document.getElementById('newDocContentInput').value;
+
+            if (!docName) {
+                alert("Vui lòng nhập tên tài liệu!");
+                return;
+            }
+
+            // Chuẩn hóa tên tệp tự tạo luôn kết thúc bằng .txt
+            const knownExts = ['.pdf', '.docx', '.xlsx', '.png', '.txt'];
+            let finalDocName = docName;
+            if (finalDocName.toLowerCase().endsWith('.txt')) {
+                finalDocName = finalDocName.substring(0, finalDocName.length - 4) + '.txt';
+            } else {
+                for (const ext of knownExts) {
+                    if (finalDocName.toLowerCase().endsWith(ext)) {
+                        finalDocName = finalDocName.substring(0, finalDocName.length - ext.length);
+                        break;
+                    }
+                }
+                finalDocName += '.txt';
+            }
+
+            const targetFolderId = selectedPickerFolders['doc'] || currentActiveFolder;
+            const targetFolder = directories[targetFolderId];
+            if (!targetFolder) return;
+
+            const newFileObj = {
+                id: `file-${Date.now()}`,
+                name: finalDocName,
+                type: "document",
+                isPublic: false, 
+                updatedTime: "Vừa xong",
+                author: "Nguyễn Minh Đức",
+                size: formatBytes(docContent.length),
+                content: docContent || "Tài liệu này không có nội dung.",
+                isInheriting: targetFolderId !== 'root',
+                permissionScope: targetFolderId === 'root' ? 'PRIVATE' : 'RESTRICTED',
+                publicRole: 'VIEW',
+                permissions: [],
+                isUploaded: false
+            };
+
+            targetFolder.files.push(newFileObj);
+            logActivity('Nguyễn Minh Đức', 'CREATE', 'Tạo tài liệu mới', finalDocName);
+            showToast(`Đã tạo tài liệu '${finalDocName}' bên trong '${targetFolder.name}'!`);
+
+            closeModal('createDocModalOverlay');
+            selectFolder(targetFolderId);
+        }
+
+        function openEditDocModal(fileId) {
+            const file = findFileById(fileId);
+            if (!file) return;
+
+            editingFileId = fileId;
+            
+            const modal = document.getElementById('createDocModalOverlay');
+            const titleEl = modal.querySelector('h2');
+            const subtitleEl = modal.querySelector('.modal-title p');
+            const nameInput = document.getElementById('newDocNameInput');
+            const nameLabel = modal.querySelector('label[for="newDocNameInput"]');
+            const contentInput = document.getElementById('newDocContentInput');
+            const contentGroup = contentInput.parentElement;
+            const saveBtn = modal.querySelector('.modal-footer .btn-primary');
+
+            // Find current parent folder
+            const parentId = findFileParentFolderId(fileId) || currentActiveFolder;
+            const parentPath = getFolderPathName(parentId);
+            
+            // Show path picker and initialize it
+            document.getElementById('docPathPickerTrigger').parentElement.style.display = 'block';
+            selectPickerFolder('doc', parentId, parentPath);
+
+            if (file.isUploaded) {
+                titleEl.textContent = "Chỉnh sửa thông tin tệp";
+                subtitleEl.textContent = "Sửa đổi tên và vị trí lưu trữ tệp";
+                nameLabel.textContent = "Tên tệp tin";
+                nameInput.value = file.name;
+                contentGroup.style.display = 'none';
+            } else {
+                titleEl.textContent = "Chỉnh sửa tài liệu";
+                subtitleEl.textContent = "Sửa đổi nội dung tài liệu văn bản";
+                nameLabel.textContent = "Tên tài liệu (.txt)";
+                nameInput.value = file.name;
+                contentGroup.style.display = 'block';
+                contentInput.value = file.content;
+            }
+
+            saveBtn.textContent = "Lưu tài liệu";
+            saveBtn.onclick = submitEditDoc;
+
+            modal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function submitEditDoc() {
+            if (!editingFileId) return;
+            const file = findFileById(editingFileId);
+            if (!file) return;
+
+            const nameVal = document.getElementById('newDocNameInput').value.trim();
+            if (!nameVal) {
+                alert("Vui lòng nhập tên tài liệu!");
+                return;
+            }
+
+            const oldName = file.name;
+            const originalExt = oldName.substring(oldName.lastIndexOf('.')).toLowerCase();
+            const knownExts = ['.pdf', '.docx', '.xlsx', '.png', '.txt'];
+            
+            let finalName = nameVal;
+            if (finalName.toLowerCase().endsWith(originalExt)) {
+                finalName = finalName.substring(0, finalName.length - originalExt.length) + originalExt;
+            } else {
+                for (const ext of knownExts) {
+                    if (finalName.toLowerCase().endsWith(ext)) {
+                        finalName = finalName.substring(0, finalName.length - ext.length);
+                        break;
+                    }
+                }
+                finalName += originalExt;
+            }
+
+            const currentParentId = findFileParentFolderId(editingFileId);
+            const targetParentId = selectedPickerFolders['doc'] || currentActiveFolder;
+
+            file.name = finalName;
+
+            if (!file.isUploaded) {
+                const contentVal = document.getElementById('newDocContentInput').value;
+                file.content = contentVal;
+                file.size = formatBytes(contentVal.length);
+            }
+            file.updatedTime = "Vừa xong";
+            file.author = "Nguyễn Minh Đức";
+
+            // If parent folder changed, move the file
+            if (currentParentId && targetParentId && currentParentId !== targetParentId) {
+                const currentParentFolder = directories[currentParentId];
+                if (currentParentFolder) {
+                    currentParentFolder.files = currentParentFolder.files.filter(f => f.id !== editingFileId);
+                }
+                const targetParentFolder = directories[targetParentId];
+                if (targetParentFolder) {
+                    targetParentFolder.files.push(file);
+                }
+                // Switch active folder to target
+                currentActiveFolder = targetParentId;
+
+                // Cập nhật lại kế thừa quyền khi di chuyển tệp
+                const isInheritVal = targetParentId !== 'root';
+                file.isInheriting = isInheritVal;
+                if (!isInheritVal) {
+                    file.permissionScope = 'PRIVATE';
+                    file.permissions = [];
+                }
+            }
+
+            logActivity('Nguyễn Minh Đức', 'EDIT', 'Chỉnh sửa tài liệu', `${oldName} -> ${finalName}`);
+            showToast(`Đã lưu thay đổi cho tài liệu '${file.name}'!`);
+
+            closeModal('createDocModalOverlay');
+            closeFilePreview();
+            selectFolder(currentActiveFolder);
+            editingFileId = null;
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+
+        // RENDER VÀ ĐIỀU HƯỚNG CÂY THƯ MỤC
+        function renderFolderTree() {
+            const container = document.getElementById('folderTreeContainer');
+            container.innerHTML = '';
+            const rootNode = renderTreeNode('root');
+            container.appendChild(rootNode);
+            lucide.createIcons();
+        }
+
+        function renderTreeNode(folderId) {
+            const folder = directories[folderId];
+            if (!folder) return document.createElement('div');
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tree-node-wrapper';
+
+            const nodeRow = document.createElement('div');
+            nodeRow.className = 'tree-node-row';
+            if (folderId === currentActiveFolder) {
+                nodeRow.classList.add('active');
+            }
+
+            nodeRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectFolder(folderId);
+            });
+            nodeRow.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                toggleFolderCollapse(folderId);
+            });
+
+            const hasChildren = folder.subfolders && folder.subfolders.length > 0;
+            const isCollapsed = collapsedFolders.has(folderId);
+
+            let caretHtml = '<span class="tree-caret"></span>';
+            if (hasChildren) {
+                caretHtml = `
+                    <span class="tree-caret ${isCollapsed ? 'collapsed' : ''}" onclick="event.stopPropagation(); toggleFolderCollapse('${folderId}')">
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                    </span>
+                `;
+            }
+
+            const iconName = (folderId === currentActiveFolder) ? 'folder-open' : 'folder';
+            
+            nodeRow.innerHTML = `
+                ${caretHtml}
+                <div class="tree-node-content">
+                    <i data-lucide="${iconName}" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${folder.name}</span>
+                </div>
+            `;
+
+            wrapper.appendChild(nodeRow);
+
+            if (hasChildren) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'tree-children-container';
+                if (isCollapsed) {
+                    childrenContainer.classList.add('collapsed');
+                }
+
+                folder.subfolders.forEach(subId => {
+                    const subNode = renderTreeNode(subId);
+                    childrenContainer.appendChild(subNode);
+                });
+
+                wrapper.appendChild(childrenContainer);
+            }
+
+            return wrapper;
+        }
+
+        function toggleFolderCollapse(folderId) {
+            if (collapsedFolders.has(folderId)) {
+                collapsedFolders.delete(folderId);
+            } else {
+                collapsedFolders.add(folderId);
+            }
+            renderFolderTree();
+        }
+
+        function selectFolder(folderId) {
+            currentActiveFolder = folderId;
+            switchView('files');
+            renderFolderTree();
+            renderBreadcrumbs(folderId);
+
+            const folder = directories[folderId];
+            document.getElementById('folderMainTitle').textContent = folder.name;
+            document.getElementById('folderSubTitle').textContent = `Thư mục ID: ${folderId} | Chứa ${folder.subfolders.length} thư mục con và ${folder.files.length} tệp tin`;
+
+            renderFilesTable();
+        }
+
+        function renderBreadcrumbs(folderId) {
+            const container = document.getElementById('breadcrumbsContainer');
+            container.innerHTML = '';
+
+            const path = [];
+            let current = directories[folderId];
+            while (current) {
+                path.unshift(current);
+                current = directories[current.parentId];
+            }
+
+            const homeItem = document.createElement('div');
+            homeItem.className = 'breadcrumb-item';
+            homeItem.innerHTML = `<i data-lucide="home" style="width: 14px; height: 14px;"></i><span>Trang chủ</span>`;
+            homeItem.onclick = () => selectFolder('root');
+            container.appendChild(homeItem);
+
+            path.forEach((folder, idx) => {
+                const sep = document.createElement('div');
+                sep.className = 'breadcrumb-separator';
+                sep.innerHTML = '/';
+                container.appendChild(sep);
+
+                const item = document.createElement('div');
+                item.className = 'breadcrumb-item';
+                if (idx === path.length - 1) {
+                    item.style.color = 'var(--text-main)';
+                    item.style.fontWeight = '500';
+                    item.style.cursor = 'default';
+                    item.onclick = null;
+                } else {
+                    item.onclick = () => selectFolder(folder.id);
+                }
+                item.innerHTML = `<span>${folder.name}</span>`;
+                container.appendChild(item);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Render Table Files và kết nối sự kiện click động (addEventListener)
+        function renderFilesTable() {
+            const tbody = document.getElementById('fileTableBody');
+            tbody.innerHTML = '';
+
+            const currentFolder = directories[currentActiveFolder];
+            const totalItems = currentFolder.subfolders.length + currentFolder.files.length;
+            
+            if (totalItems === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 50px;">
+                            <i data-lucide="folder-open" style="width: 36px; height: 36px; margin-bottom: 8px; color: #cbd5e1;"></i>
+                            <div style="font-weight: 500;">Thư mục này hiện tại trống. Nhấn "Thêm mới" để tạo nội dung.</div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // 1. Thư mục con
+            currentFolder.subfolders.forEach(subId => {
+                const subFolder = directories[subId];
+                if (!subFolder) return;
+
+                const tr = document.createElement('tr');
+                tr.className = 'explorer-row';
+                tr.addEventListener('dblclick', () => selectFolder(subId));
+
+                const eff = getEffectivePermissions(subId, 'folder');
+                const badgeHtml = getStatusBadgeHtml(eff);
+
+                const author = subFolder.author || "Quản trị viên";
+                const createdTime = subFolder.createdTime || "12:00 20/06/2026";
+                const updatedBy = subFolder.updatedBy || author;
+                const updatedTime = subFolder.updatedTime || createdTime;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="file-name-cell">
+                            <div class="file-icon folder">
+                                <i data-lucide="folder"></i>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-main); font-weight: 600;">${subFolder.name}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${subFolder.subfolders.length} thư mục con, ${subFolder.files.length} tệp</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-muted); font-weight: 500;">Thư mục</span>
+                    </td>
+                    <td>${badgeHtml}</td>
+                    <td>
+                        <div style="color: var(--text-main); font-weight: 500;">${author}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">lúc ${createdTime}</div>
+                    </td>
+                    <td>
+                        <div style="color: var(--text-main); font-weight: 500;">${updatedBy}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">lúc ${updatedTime}</div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div style="display: inline-block;">
+                            <button class="btn-more btn-more-trigger">
+                                <i data-lucide="more-vertical" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                // Lắng nghe sự kiện
+                const btnMore = tr.querySelector('.btn-more-trigger');
+                btnMore.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showGlobalDropdown(e, subId, 'folder');
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            // 2. Tệp tin
+            currentFolder.files.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.className = 'explorer-row';
+                tr.addEventListener('dblclick', () => openFilePreview(file));
+
+                const eff = getEffectivePermissions(file.id, 'file');
+                const badgeHtml = getStatusBadgeHtml(eff);
+
+                const ext = file.name.substring(file.name.lastIndexOf('.')) || '.txt';
+
+                const author = file.author || "Quản trị viên";
+                const createdTime = file.createdTime || "12:00 20/06/2026";
+                const updatedBy = file.updatedBy || author;
+                const updatedTime = file.updatedTime || createdTime;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="file-name-cell">
+                            <div class="file-icon document">
+                                <i data-lucide="file-text"></i>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-main); font-weight: 600;">${file.name}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${file.size}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-muted); font-weight: 500;">${ext}</span>
+                    </td>
+                    <td>${badgeHtml}</td>
+                    <td>
+                        <div style="color: var(--text-main); font-weight: 500;">${author}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">lúc ${createdTime}</div>
+                    </td>
+                    <td>
+                        <div style="color: var(--text-main); font-weight: 500;">${updatedBy}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 400;">lúc ${updatedTime}</div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div style="display: inline-block;">
+                            <button class="btn-more btn-more-trigger">
+                                <i data-lucide="more-vertical" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                // Lắng nghe sự kiện
+                const btnMore = tr.querySelector('.btn-more-trigger');
+                btnMore.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showGlobalDropdown(e, file.id, 'file');
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Chuyển view
+        function switchView(viewName) {
+            document.querySelectorAll('.content-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            document.querySelectorAll('.tree-node-row, .menu-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            if (viewName === 'history') {
+                document.getElementById('menuItem-history').classList.add('active');
+                renderHistoryTable();
+            } else if (viewName === 'trash') {
+                document.getElementById('menuItem-trash').classList.add('active');
+                renderTrashTable();
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.action-dropdown').forEach(d => d.classList.remove('show'));
+            const globalDropdown = document.getElementById('globalActionDropdown');
+            if (globalDropdown) {
+                globalDropdown.style.display = 'none';
+            }
+        }
+        document.addEventListener('click', closeAllDropdowns);
+
+        function showGlobalDropdown(e, itemId, itemType) {
+            const dropdown = document.getElementById('globalActionDropdown');
+            if (!dropdown) return;
+
+            // Close all dropdowns first
+            closeAllDropdowns();
+
+            // Set current target state
+            activeTargetId = itemId;
+            activeTargetType = itemType;
+            
+            const item = getItem(itemId, itemType);
+            if (!item) return;
+            activeTargetName = item.name;
+
+            // Generate content based on type
+            let html = '';
+            if (itemType === 'folder') {
+                html = `
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('open-folder')">
+                        <i data-lucide="folder-open" style="width: 14px; height: 14px;"></i>
+                        Mở thư mục
+                    </div>
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('edit-folder')">
+                        <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                        Chỉnh sửa
+                    </div>
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('share-folder')">
+                        <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i>
+                        Phân quyền
+                    </div>
+                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                    <div class="action-dropdown-item danger" onclick="handleGlobalAction('delete-folder')">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        Xóa thư mục
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('view-file')">
+                        <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                        Xem tệp tin
+                    </div>
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('download-file')">
+                        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                        Tải xuống
+                    </div>
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('edit-file')">
+                        <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                        Chỉnh sửa
+                    </div>
+                    <div class="action-dropdown-item" onclick="handleGlobalAction('share-file')">
+                        <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i>
+                        Phân quyền
+                    </div>
+                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                    <div class="action-dropdown-item danger" onclick="handleGlobalAction('delete-file')">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        Xóa tài liệu
+                    </div>
+                `;
+            }
+
+            dropdown.innerHTML = html;
+            lucide.createIcons();
+
+            // Position the dropdown relative to the clicked button
+            const btn = e.currentTarget;
+            const rect = btn.getBoundingClientRect();
+            
+            // Show it to read offsetWidth/Height if needed, or use fixed size
+            dropdown.style.display = 'block';
+            dropdown.style.position = 'fixed';
+            dropdown.style.right = 'auto'; // Reset right style from CSS
+            
+            const dropdownWidth = 170;
+            const dropdownHeight = itemType === 'folder' ? 170 : 210; // approximate heights
+            
+            // Calculate horizontal position (align right edge with button right edge)
+            let left = rect.right - dropdownWidth;
+            if (left < 10) left = 10; // prevent overflowing left edge of viewport
+            
+            // Calculate vertical position (check viewport space)
+            let top = rect.bottom + 4;
+            if (rect.bottom + 4 + dropdownHeight > window.innerHeight && rect.top - 4 - dropdownHeight > 0) {
+                // Not enough space below, open upwards
+                top = rect.top - dropdownHeight - 4;
+            }
+
+            dropdown.style.left = `${left}px`;
+            dropdown.style.top = `${top}px`;
+        }
+
+        function handleGlobalAction(action) {
+            const id = activeTargetId;
+            const type = activeTargetType;
+            
+            closeAllDropdowns();
+            
+            if (action === 'open-folder') {
+                selectFolder(id);
+            } else if (action === 'edit-folder') {
+                openEditFolderModal(id);
+            } else if (action === 'share-folder' || action === 'share-file') {
+                openShareModal(id, type);
+            } else if (action === 'delete-folder') {
+                deleteFolderToTrash(id);
+            } else if (action === 'view-file') {
+                const file = findFileById(id);
+                if (file) openFilePreview(file);
+            } else if (action === 'download-file') {
+                const file = findFileById(id);
+                if (file) {
+                    showToast(`Bắt đầu tải xuống tệp ${file.name}...`);
+                    logActivity('Nguyễn Minh Đức', 'DOWNLOAD', 'Tải xuống tệp', file.name);
+                }
+            } else if (action === 'edit-file') {
+                openEditDocModal(id);
+            } else if (action === 'delete-file') {
+                deleteFileToTrash(id);
+            }
+        }
+
+        // Xóa thư mục
+        function deleteFolderToTrash(folderId) {
+            const parent = directories[currentActiveFolder];
+            const idx = parent.subfolders.indexOf(folderId);
+            if (idx === -1) return;
+
+            const folder = directories[folderId];
+            
+            db.trash.push({
+                id: folder.id,
+                name: folder.name,
+                type: 'folder',
+                size: 'Thư mục con',
+                originalFolder: currentActiveFolder,
+                originalFolderName: parent.name
+            });
+
+            parent.subfolders.splice(idx, 1);
+            logActivity('Nguyễn Minh Đức', 'DELETE', 'Xóa thư mục', folder.name);
+            showToast(`Đã chuyển thư mục '${folder.name}' vào thùng rác!`);
+
+            selectFolder(currentActiveFolder);
+            updateTrashBadges();
+        }
+
+        // Xóa tệp
+        function deleteFileToTrash(fileId) {
+            const folder = directories[currentActiveFolder];
+            const idx = folder.files.findIndex(f => f.id === fileId);
+            if (idx === -1) return;
+
+            const file = folder.files[idx];
+
+            db.trash.push({
+                id: file.id,
+                name: file.name,
+                type: 'document',
+                size: file.size,
+                originalFolder: currentActiveFolder,
+                originalFolderName: folder.name
+            });
+
+            folder.files.splice(idx, 1);
+            logActivity('Nguyễn Minh Đức', 'DELETE', 'Xóa tài liệu', file.name);
+            showToast(`Đã chuyển tài liệu '${file.name}' vào thùng rác!`);
+
+            selectFolder(currentActiveFolder);
+            updateTrashBadges();
+        }
+
+        // Khôi phục
+        function restoreItemFromTrash(trashId) {
+            const idx = db.trash.findIndex(t => t.id === trashId);
+            if (idx === -1) return;
+
+            const item = db.trash[idx];
+
+            if (item.type === 'folder') {
+                directories[item.originalFolder].subfolders.push(item.id);
+            } else {
+                directories[item.originalFolder].files.push({
+                    id: item.id,
+                    name: item.name,
+                    type: 'document',
+                    isPublic: true,
+                    updatedTime: "Vừa xong",
+                    author: "Nguyễn Đức",
+                    size: item.size,
+                    content: `Nội dung khôi phục từ tệp tin: ${item.name}`
+                });
+            }
+
+            db.trash.splice(idx, 1);
+            logActivity('Nguyễn Minh Đức', 'RESTORE', 'Khôi phục tài liệu', item.name);
+            showToast(`Khôi phục thành công '${item.name}'!`);
+
+            renderTrashTable();
+            updateTrashBadges();
+            renderFolderTree();
+            selectFolder(currentActiveFolder);
+        }
+
+        // Xóa vĩnh viễn
+        function permanentlyDelete(index) {
+            const item = db.trash[index];
+            if (!item) return;
+
+            if (confirm(`Bạn muốn xóa vĩnh viễn '${item.name}'?`)) {
+                db.trash.splice(index, 1);
+                logActivity('Nguyễn Minh Đức', 'DELETE', 'Xóa vĩnh viễn', item.name);
+                showToast(`Đã xóa vĩnh viễn '${item.name}'!`);
+                renderTrashTable();
+                updateTrashBadges();
+            }
+        }
+
+        function updateTrashBadges() {
+            const count = db.trash.length;
+            document.getElementById('sidebarTrashCount').textContent = count;
+            document.getElementById('sidebarTrashCount').style.display = count === 0 ? 'none' : 'inline-block';
+        }
+
+        // Xem tệp
+        function openFilePreview(file) {
+            const overlay = document.getElementById('filePreviewOverlay');
+            document.getElementById('previewFileName').textContent = file.name;
+            document.getElementById('previewFileMeta').textContent = `${file.size} | Cập nhật bởi ${file.author} (${file.updatedTime})`;
+            document.getElementById('previewPaperTitle').textContent = file.name;
+
+            const bodyFiller = document.getElementById('previewTextContentFiller');
+            bodyFiller.textContent = file.content || "Tài liệu này không có nội dung.";
+
+            // Render preview buttons dynamically based on file type
+            const previewHeaderRight = document.getElementById('previewHeaderRight');
+            previewHeaderRight.innerHTML = '';
+
+            // Tải xuống
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn-action-outline';
+            downloadBtn.innerHTML = '<i data-lucide="download" style="width: 14px; height: 14px;"></i> Tải xuống';
+            downloadBtn.onclick = () => {
+                showToast(`Bắt đầu tải xuống tệp ${file.name}...`);
+                logActivity('Nguyễn Minh Đức', 'DOWNLOAD', 'Tải xuống tệp', file.name);
+            };
+            previewHeaderRight.appendChild(downloadBtn);
+
+            // Chỉnh sửa
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-action-outline';
+            editBtn.style.borderColor = 'var(--primary-color)';
+            editBtn.style.color = 'var(--primary-color)';
+            editBtn.innerHTML = '<i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Chỉnh sửa';
+            editBtn.onclick = () => {
+                openEditDocModal(file.id);
+            };
+            previewHeaderRight.appendChild(editBtn);
+
+            // Đóng
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'btn-close';
+            closeBtn.innerHTML = '<i data-lucide="x" style="width: 18px; height: 18px;"></i>';
+            closeBtn.onclick = closeFilePreview;
+            previewHeaderRight.appendChild(closeBtn);
+
+            logActivity('Nguyễn Minh Đức', 'VIEW', 'Mở xem tệp', file.name);
+            overlay.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function openFilePreviewById(fileId) {
+            const folder = directories[currentActiveFolder];
+            const file = folder.files.find(f => f.id === fileId);
+            if (file) openFilePreview(file);
+        }
+
+        function closeFilePreview() {
+            document.getElementById('filePreviewOverlay').classList.remove('open');
+        }
+
+        // Lịch sử table
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            db.history.forEach(log => {
+                const tr = document.createElement('tr');
+                const badgeClass = getActionBadgeClass(log.action);
+                
+                tr.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600;">
+                                ${log.user.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span style="font-weight: 600; color: var(--text-main);">${log.user}</span>
+                        </div>
+                    </td>
+                    <td><span class="${badgeClass}">${log.actionLabel}</span></td>
+                    <td><span style="font-weight: 500;">${log.target}</span></td>
+                    <td style="color: var(--text-muted);">${log.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getActionBadgeClass(action) {
+            if (action === 'VIEW') return 'action-badge act-view';
+            if (action === 'CREATE') return 'action-badge act-create';
+            if (action === 'EDIT') return 'action-badge act-edit';
+            if (action === 'DELETE') return 'action-badge act-delete';
+            if (action === 'RESTORE') return 'action-badge act-restore';
+            if (action === 'SHARE') return 'action-badge act-share';
+            return 'action-badge';
+        }
+
+        function clearAllHistoryMock() {
+            db.history = [];
+            renderHistoryTable();
+            showToast("Đã dọn dẹp nhật ký!");
+        }
+
+        function logActivity(user, actionCode, actionLabel, target) {
+            db.history.unshift({
+                id: Date.now(),
+                user: user,
+                action: actionCode,
+                actionLabel: actionLabel,
+                target: target,
+                time: "Vừa xong"
+            });
+        }
+
+        function handleAction(type, itemName) {
+            showToast(`Đang thực hiện ${type} tệp tin: ${itemName}`);
+            const actCode = type === 'xem' ? 'VIEW' : 'EDIT';
+            const actLabel = type === 'xem' ? 'Xem tài liệu' : 'Chỉnh sửa';
+            logActivity(`Nguyễn Minh Đức`, actCode, actLabel, itemName);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('notificationToast');
+            const msgEl = document.getElementById('toastMessage');
+            msgEl.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        function renderTrashTable() {
+            const tbody = document.getElementById('trashTableBody');
+            tbody.innerHTML = '';
+
+            if (db.trash.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 48px;">Thùng rác trống</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            db.trash.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const iconName = item.type === 'folder' ? 'folder' : 'file-text';
+                const iconClass = item.type === 'folder' ? 'file-icon folder' : 'file-icon document';
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="file-name-cell">
+                            <div class="${iconClass}">
+                                <i data-lucide="${iconName}"></i>
+                            </div>
+                            <span style="font-weight: 600;">${item.name}</span>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-muted);">${item.size}</td>
+                    <td><span style="font-weight: 500;">/Tất cả tài liệu/${item.originalFolderName}</span></td>
+                    <td style="text-align: right;">
+                        <button class="btn-action-outline btn-restore-trash" style="margin-right: 6px;">
+                            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+                            Khôi phục
+                        </button>
+                        <button class="btn-action-outline btn-delete-trash" style="color: #ef4444; border-color: #fca5a5;">
+                            Xóa vĩnh viễn
+                        </button>
+                    </td>
+                `;
+
+                tr.querySelector('.btn-restore-trash').addEventListener('click', () => {
+                    restoreItemFromTrash(item.id);
+                });
+                tr.querySelector('.btn-delete-trash').addEventListener('click', () => {
+                    permanentlyDelete(index);
+                });
+
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------
+        // SỰ KIỆN PHÂN QUYỀN TRONG POPUP (Đã cải tiến 3 chế độ)
+        // -------------------------------------------------------------
+        function openShareModal(itemId, targetType) {
+            const item = getItem(itemId, targetType);
+            if (!item) return;
+
+            activeTargetId = itemId;
+            activeTargetType = targetType;
+            activeTargetName = item.name;
+
+            const iconBadge = document.getElementById('modalTargetIcon');
+            const titleEl = document.getElementById('modalTargetTitle');
+            const subtitleEl = document.getElementById('modalTargetSubtitle');
+            
+            if (targetType === 'folder') {
+                iconBadge.innerHTML = '<i data-lucide="folder" style="width: 20px; height: 20px;"></i>';
+                iconBadge.style.background = 'var(--primary-gradient)';
+                titleEl.textContent = 'Phân quyền Thư mục';
+            } else {
+                iconBadge.innerHTML = '<i data-lucide="file-text" style="width: 20px; height: 20px;"></i>';
+                iconBadge.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                titleEl.textContent = 'Phân quyền File tài liệu';
+            }
+            subtitleEl.textContent = `Tài liệu: ${item.name}`;
+
+            const parentFolderId = getParentFolderId(itemId, targetType);
+            const inheritCard = document.querySelector('.inherit-card');
+            const inheritNoteContainer = document.getElementById('inheritNoteContainer');
+            const scopeSelect = document.getElementById('scopeSelect');
+            const publicRoleSelect = document.getElementById('publicRoleSelect');
+            const saveBtn = document.querySelector('#shareModalOverlay .modal-footer .btn-primary');
+
+            if (!parentFolderId || parentFolderId === 'root') {
+                // Thư mục gốc (root) hoặc thư mục/tệp trực tiếp ở cấp 1 (con của root) -> không thể kế thừa quyền
+                inheritCard.style.display = 'none';
+                inheritNoteContainer.style.display = 'none';
+                document.getElementById('inheritToggle').checked = false;
+                item.isInheriting = false;
+
+                scopeSelect.disabled = false;
+                publicRoleSelect.disabled = false;
+                saveBtn.style.display = 'inline-block'; // Hiện nút Lưu
+            } else {
+                // Thư mục con cấp 2 trở đi -> luôn kế thừa quyền từ mẹ
+                inheritCard.style.display = 'none'; // Ẩn switch button
+                inheritNoteContainer.style.display = 'block';
+                
+                const parentFolder = directories[parentFolderId];
+                const parentName = parentFolder ? parentFolder.name : 'Thư mục mẹ';
+                document.getElementById('inheritNoteText').textContent = `Quyền truy cập của tệp/thư mục này được kế thừa từ thư mục mẹ: "${parentName}". Bạn không thể chỉnh sửa phân quyền này trực tiếp.`;
+                
+                document.getElementById('inheritToggle').checked = true;
+                item.isInheriting = true;
+
+                scopeSelect.disabled = true;
+                publicRoleSelect.disabled = true;
+                saveBtn.style.display = 'none'; // Ẩn nút Lưu do chỉ đọc
+            }
+
+            popupScope = item.permissionScope || 'RESTRICTED';
+            popupPublicRole = item.publicRole || 'VIEW';
+
+            scopeSelect.value = popupScope;
+            publicRoleSelect.value = popupPublicRole;
+
+            // Tải danh sách quyền tùy chỉnh
+            currentPermissions = JSON.parse(JSON.stringify(item.permissions || []));
+
+            selectedSubjectsForAdding = [];
+            renderSelectedTags();
+
+            toggleInheritance();
+
+            document.getElementById('shareModalOverlay').classList.add('open');
+            lucide.createIcons();
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModalOverlay').classList.remove('open');
+            document.getElementById('memberSearchInput').value = '';
+            selectedSubject = null;
+            selectedSubjectsForAdding = [];
+            renderSelectedTags();
+            document.getElementById('btnAddMember').disabled = true;
+        }
+
+        // Bật/tắt Kế thừa
+        function toggleInheritance() {
+            const isInheriting = document.getElementById('inheritToggle').checked;
+            
+            const scopeContainer = document.getElementById('scopeContainer');
+            const addMemberSection = document.getElementById('addMemberSection');
+            const publicRoleContainer = document.getElementById('publicRoleContainer');
+            
+            if (isInheriting) {
+                // Ẩn tất cả cấu hình tùy chỉnh
+                scopeContainer.style.display = 'none';
+                addMemberSection.style.display = 'none';
+                publicRoleContainer.style.display = 'none';
+                
+                // Lấy quyền hiệu lực từ thư mục mẹ
+                const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                if (parentFolderId) {
+                    const parentEff = getEffectivePermissions(parentFolderId, 'folder');
+                    popupScope = parentEff.permissionScope;
+                    popupPublicRole = parentEff.publicRole;
+                    // Đánh dấu là kế thừa
+                    currentPermissions = parentEff.permissions.map(p => ({ ...p, isInherited: true }));
+                } else {
+                    currentPermissions = [];
+                }
+            } else {
+                // Hiện chọn phạm vi
+                scopeContainer.style.display = 'block';
+                
+                // Đồng bộ hóa hiển thị theo scope hiện tại
+                popupScope = document.getElementById('scopeSelect').value;
+                changeScope(popupScope);
+            }
+            
+            renderPermissions();
+        }
+
+        // Thay đổi chế độ Phạm vi truy cập (Riêng tư, Giới hạn, Công khai)
+        function changeScope(scopeValue) {
+            popupScope = scopeValue;
+            
+            const addMemberSection = document.getElementById('addMemberSection');
+            const publicRoleContainer = document.getElementById('publicRoleContainer');
+            
+            if (scopeValue === 'PRIVATE') {
+                // Riêng tư -> Ẩn thêm thành viên, ẩn công khai
+                addMemberSection.style.display = 'none';
+                publicRoleContainer.style.display = 'none';
+            } else if (scopeValue === 'RESTRICTED') {
+                // Giới hạn -> Hiện thêm thành viên, ẩn công khai
+                addMemberSection.style.display = 'block';
+                publicRoleContainer.style.display = 'none';
+                
+                // Loại bỏ cờ kế thừa đối với các quyền tùy chỉnh
+                currentPermissions = currentPermissions.filter(p => !p.isInherited);
+                currentPermissions.forEach(p => p.isInherited = false);
+            } else if (scopeValue === 'PUBLIC') {
+                // Công khai -> Ẩn thêm thành viên, hiện cấu hình quyền hạn công khai
+                addMemberSection.style.display = 'none';
+                publicRoleContainer.style.display = 'block';
+                popupPublicRole = document.getElementById('publicRoleSelect').value;
+            }
+            
+            renderPermissions();
+        }
+
+        // Thay đổi quyền hạn công khai
+        function changePublicRole(roleValue) {
+            popupPublicRole = roleValue;
+            renderPermissions();
+        }
+
+        // Render danh sách gán quyền trong Modal
+        function renderPermissions() {
+            const container = document.getElementById('membersListContainer');
+            container.innerHTML = '';
+
+            const isInheriting = document.getElementById('inheritToggle').checked;
+
+            if (isInheriting) {
+                // TRƯỜNG HỢP 1: ĐANG KẾ THỪA (Chỉ đọc hoàn toàn)
+                if (popupScope === 'PRIVATE') {
+                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', false));
+                    container.appendChild(createReadOnlyRow('Admin tổng', 'Toàn quyền', 'AD', 'Cấp cao nhất', true));
+                } 
+                else if (popupScope === 'PUBLIC') {
+                    const publicLabel = popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa';
+                    container.appendChild(createReadOnlyRow('Tất cả nhân sự công ty', publicLabel, 'ALL', 'Toàn bộ tài khoản có thể truy cập', true));
+                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', false));
+                }
+                else if (popupScope === 'RESTRICTED') {
+                    if (currentPermissions.length === 0) {
+                        container.innerHTML = `
+                            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                                Thư mục mẹ không cấu hình chia sẻ giới hạn cho thành viên nào.
+                            </div>
+                        `;
+                        return;
+                    }
+                    currentPermissions.forEach((perm) => {
+                        const row = document.createElement('div');
+                        row.className = 'member-row';
+                        const avatarClass = getMemberAvatarClass(perm.type);
+                        const typeLabel = getBadgeLabel(perm.type);
+                        const typeBadgeClass = 'type-badge ' + getBadgeClass(perm.type);
+                        
+                        row.innerHTML = `
+                            <div class="member-info">
+                                <div class="${avatarClass}">${perm.avatarCode}</div>
+                                <div class="member-details">
+                                    <div class="member-name">
+                                        ${perm.name}
+                                        <span class="${typeBadgeClass}">${typeLabel}</span>
+                                        <span class="type-badge group" style="background: #f1f5f9; color: var(--text-muted); margin-left: 4px;">Kế thừa</span>
+                                    </div>
+                                    <div class="member-email">${perm.sub}</div>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <span class="row-permission-badge">${getPermissionLabel(perm.permission)}</span>
+                            </div>
+                        `;
+                        container.appendChild(row);
+                    });
+                }
+            } else {
+                // TRƯỜNG HỢP 2: TẮT KẾ THỪA
+                if (popupScope === 'PRIVATE') {
+                    // 2a. RIÊNG TƯ (Chỉ mình tôi và admin tổng)
+                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', 'USER'));
+                    container.appendChild(createReadOnlyRow('Admin tổng', 'Toàn quyền', 'AD', 'Cấp cao nhất', 'ROLE'));
+                } 
+                else if (popupScope === 'RESTRICTED') {
+                    // 2b. GIỚI HẠN (Cho phép thêm/sửa/xóa quyền thành viên)
+                    if (currentPermissions.length === 0) {
+                        container.innerHTML = `
+                            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                                Chưa có thành viên nào được gán quyền. Hãy tìm kiếm và thêm thành viên phía trên.
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    currentPermissions.forEach((perm, index) => {
+                        const row = document.createElement('div');
+                        row.className = 'member-row';
+                        const avatarClass = getMemberAvatarClass(perm.type);
+                        const typeText = getBadgeLabel(perm.type);
+                        const typeBadgeClass = 'type-badge ' + getBadgeClass(perm.type);
+
+                        row.innerHTML = `
+                            <div class="member-info">
+                                <div class="${avatarClass}">${perm.avatarCode}</div>
+                                <div class="member-details">
+                                    <div class="member-name">${perm.name}<span class="${typeBadgeClass}">${typeText}</span></div>
+                                    <div class="member-email">${perm.sub}</div>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <select class="row-permission-select">
+                                    <option value="VIEW" ${perm.permission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                    <option value="EDIT" ${perm.permission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                </select>
+                                <button class="btn-delete-permission">
+                                    <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            </div>
+                        `;
+
+                        // Bind events dynamically
+                        row.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                            updatePermissionLevel(index, e.target.value);
+                        });
+                        row.querySelector('.btn-delete-permission').addEventListener('click', () => {
+                            deletePermission(index);
+                        });
+
+                        container.appendChild(row);
+                    });
+                } 
+                else if (popupScope === 'PUBLIC') {
+                    // 2c. CÔNG KHAI (Hiển thị Tất cả nhân sự và Tôi)
+                    const publicLabel = popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa';
+                    container.appendChild(createReadOnlyRow('Tất cả nhân sự công ty', publicLabel, 'ALL', 'Toàn bộ tài khoản có thể truy cập', 'ROLE'));
+                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', 'USER'));
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        // Helper tạo hàng quyền chỉ đọc (Owner/Public)
+        function createReadOnlyRow(name, roleLabel, avatarCode, subText, typeOrIsGroup = 'USER') {
+            const row = document.createElement('div');
+            row.className = 'member-row';
+            
+            let type = 'USER';
+            if (typeOrIsGroup === true || typeOrIsGroup === 'GROUP') {
+                type = 'GROUP';
+            } else if (typeof typeOrIsGroup === 'string') {
+                type = typeOrIsGroup;
+            }
+            const avatarClass = getMemberAvatarClass(type);
+            
+            row.innerHTML = `
+                <div class="member-info">
+                    <div class="${avatarClass}">${avatarCode}</div>
+                    <div class="member-details">
+                        <div class="member-name">${name}</div>
+                        <div class="member-email">${subText}</div>
+                    </div>
+                </div>
+                <div class="member-actions">
+                    <span class="row-permission-badge">${roleLabel}</span>
+                </div>
+            `;
+            return row;
+        }
+
+        // Helper phân loại
+        function getMemberAvatarClass(type) {
+            if (type === 'GROUP') return 'member-avatar group-avatar';
+            if (type === 'BRANCH') return 'member-avatar branch-avatar';
+            if (type === 'DEPT') return 'member-avatar dept-avatar';
+            if (type === 'ROLE') return 'member-avatar role-avatar';
+            return 'member-avatar';
+        }
+
+        function getBadgeClass(type) {
+            if (type === 'BRANCH') return 'branch';
+            if (type === 'DEPT') return 'dept';
+            if (type === 'GROUP') return 'group';
+            if (type === 'USER') return 'user';
+            if (type === 'ROLE') return 'role';
+            return 'user';
+        }
+
+        function getBadgeLabel(type) {
+            if (type === 'BRANCH') return 'Chi nhánh';
+            if (type === 'DEPT') return 'Phòng ban';
+            if (type === 'GROUP') return 'Nhóm';
+            if (type === 'USER') return 'User';
+            if (type === 'ROLE') return 'Vai trò';
+            return type;
+        }
+
+        // Tag hiển thị thêm nhanh
+        function renderSelectedTags() {
+            const container = document.getElementById('selectedTagsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (selectedSubjectsForAdding.length === 0) {
+                document.getElementById('btnAddMember').disabled = true;
+                return;
+            }
+            
+            document.getElementById('btnAddMember').disabled = false;
+            
+            selectedSubjectsForAdding.forEach(sub => {
+                const tag = document.createElement('div');
+                tag.className = 'selected-tag';
+                tag.innerHTML = `
+                    <span style="font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                        <span>${sub.name}</span>
+                        <span class="type-badge ${getBadgeClass(sub.type)}" style="margin-left: 2px; font-size: 8px; padding: 1px 3px;">${getBadgeLabel(sub.type)}</span>
+                    </span>
+                    <button onclick="removeSelectedTag('${sub.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 2px; margin-left: 4px;">
+                        <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                    </button>
+                `;
+                container.appendChild(tag);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function removeSelectedTag(subId) {
+            selectedSubjectsForAdding = selectedSubjectsForAdding.filter(s => s.id !== subId);
+            renderSelectedTags();
+            filterDropdown();
+        }
+
+        // Quyền nhãn hiển thị tiếng Việt
+        function getPermissionLabel(perm) {
+            if (perm === 'VIEW') return 'Chỉ xem';
+            if (perm === 'EDIT') return 'Chỉnh sửa';
+            return perm;
+        }
+
+        function deletePermission(index) {
+            currentPermissions.splice(index, 1);
+            renderPermissions();
+        }
+
+        function updatePermissionLevel(index, newLevel) {
+            currentPermissions[index].permission = newLevel;
+        }
+
+        // Tìm kiếm gợi ý
+        function showDropdown() {
+            document.getElementById('searchDropdown').classList.add('show');
+            filterDropdown();
+        }
+
+        function filterDropdown() {
+            const typeFilter = document.getElementById('searchTypeSelect').value;
+            const searchVal = document.getElementById('memberSearchInput').value.toLowerCase();
+            const dropdown = document.getElementById('searchDropdown');
+            dropdown.innerHTML = '';
+
+            const existingIds = currentPermissions.map(p => p.id);
+            const filtered = availableSubjects.filter(sub => {
+                // Skip if already in permissions list
+                if (existingIds.includes(sub.id)) return false;
+                
+                // Skip if doesn't match type filter
+                if (typeFilter !== 'ALL' && sub.type !== typeFilter) return false;
+                
+                // Skip if doesn't match search text
+                return sub.name.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 12px;">Không có gợi ý</div>`;
+                return;
+            }
+
+            filtered.forEach(sub => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                
+                const isSelected = selectedSubjectsForAdding.some(s => s.id === sub.id);
+                const checkedAttr = isSelected ? 'checked' : '';
+                
+                item.onclick = (e) => {
+                    e.stopPropagation(); // Giữ dropdown mở để chọn tiếp
+                    const idx = selectedSubjectsForAdding.findIndex(s => s.id === sub.id);
+                    if (idx > -1) {
+                        selectedSubjectsForAdding.splice(idx, 1);
+                    } else {
+                        selectedSubjectsForAdding.push(sub);
+                    }
+                    renderSelectedTags();
+                    filterDropdown(); // Refresh dropdown list
+                };
+
+                item.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" ${checkedAttr} style="pointer-events: none; width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 13px; font-weight: 500; color: var(--text-main);">${sub.name}</div>
+                    </div>
+                    <span class="type-badge ${getBadgeClass(sub.type)}">${getBadgeLabel(sub.type)}</span>
+                `;
+                dropdown.appendChild(item);
+            });
+        }
+
+        function addNewPermission() {
+            if (selectedSubjectsForAdding.length === 0) return;
+            
+            const selectedRole = document.getElementById('newPermissionSelect').value;
+            
+            selectedSubjectsForAdding.forEach(sub => {
+                if (!currentPermissions.some(p => p.id === sub.id)) {
+                    currentPermissions.push({
+                        id: sub.id,
+                        name: sub.name,
+                        type: sub.type,
+                        permission: selectedRole,
+                        isInherited: false,
+                        sub: sub.sub,
+                        avatarCode: sub.avatarCode
+                    });
+                }
+            });
+
+            selectedSubjectsForAdding = [];
+            document.getElementById('memberSearchInput').value = '';
+            document.getElementById('btnAddMember').disabled = true;
+            
+            renderSelectedTags();
+            renderPermissions();
+            document.getElementById('searchDropdown').classList.remove('show');
+        }
+
+        function savePermissions() {
+            const item = getItem(activeTargetId, activeTargetType);
+            if (item) {
+                const isInheriting = document.getElementById('inheritToggle').checked;
+                item.isInheriting = isInheriting;
+                
+                if (!isInheriting) {
+                    item.permissionScope = popupScope;
+                    item.publicRole = popupPublicRole;
+                    item.permissions = JSON.parse(JSON.stringify(currentPermissions));
+                }
+                
+                if (activeTargetType === 'file') {
+                    const eff = getEffectivePermissions(activeTargetId, 'file');
+                    item.isPublic = (eff.permissionScope === 'PUBLIC');
+                }
+            }
+
+            closeShareModal();
+            
+            let actionDesc = "";
+            const isInheritedNow = document.getElementById('inheritToggle').checked;
+            if (isInheritedNow) {
+                actionDesc = "Cấu hình kế thừa quyền";
+            } else {
+                if (popupScope === 'PRIVATE') actionDesc = "Đặt cấu hình Riêng tư";
+                else if (popupScope === 'PUBLIC') actionDesc = `Đặt cấu hình Công khai (${popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa'})`;
+                else actionDesc = "Cấu hình Giới hạn thành viên";
+            }
+            
+            logActivity('Nguyễn Minh Đức', 'SHARE', actionDesc, activeTargetName);
+            showToast(`Đã lưu thay đổi phân quyền cho '${activeTargetName}'!`);
+
+            renderFolderTree();
+            selectFolder(currentActiveFolder);
+        }
+
+        // Tắt dropdown khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            const addBtn = document.getElementById('btnAddNewTrigger');
+            const addDropdown = document.getElementById('addNewDropdown');
+            if (addBtn && !addBtn.contains(e.target) && addDropdown && !addDropdown.contains(e.target)) {
+                addDropdown.classList.remove('show');
+            }
+
+            const container = document.querySelector('.search-wrapper');
+            if (container && !container.contains(e.target)) {
+                document.getElementById('searchDropdown').classList.remove('show');
+            }
+
+            // Đóng các path-picker khi click ngoài
+            if (!e.target.closest('.path-picker-trigger') && !e.target.closest('.path-picker-dropdown')) {
+                document.querySelectorAll('.path-picker-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+    </script>
+</body>
+</html>

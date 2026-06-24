@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440, initial-scale=1" />
+  <title>SandboxVN — Tạo khuyến mãi</title>
+
+  <!-- ───── Resources referenced from JS, lifted for the bundler ───── -->
+  <meta name="ext-resource-dependency" content="../assets/logo-primary.png"    data-resource-id="logoPrimary" />
+  <meta name="ext-resource-dependency" content="../assets/avatars/avatar-04.jpg" data-resource-id="avatar04" />
+  <meta name="ext-resource-dependency" content="../assets/modules/marketing.png"  data-resource-id="modMarketing" />
+  <meta name="ext-resource-dependency" content="../assets/modules/sales.png"      data-resource-id="modSales" />
+  <meta name="ext-resource-dependency" content="../assets/modules/storage.png"    data-resource-id="modStorage" />
+  <meta name="ext-resource-dependency" content="../assets/modules/buy.png"        data-resource-id="modBuy" />
+  <meta name="ext-resource-dependency" content="../assets/modules/account.png"    data-resource-id="modAccount" />
+  <meta name="ext-resource-dependency" content="../assets/modules/cash.png"       data-resource-id="modCash" />
+  <meta name="ext-resource-dependency" content="../assets/modules/job.png"        data-resource-id="modJob" />
+  <meta name="ext-resource-dependency" content="../assets/modules/customer.png"   data-resource-id="modCustomer" />
+  <meta name="ext-resource-dependency" content="../assets/modules/employee.png"   data-resource-id="modEmployee" />
+  <meta name="ext-resource-dependency" content="../assets/modules/utilities.png"  data-resource-id="modUtilities" />
+  <meta name="ext-resource-dependency" content="../assets/modules/report.png"     data-resource-id="modReport" />
+
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <link rel="stylesheet" href="../ui_kits/admin/admin.css" />
+  <link rel="stylesheet" href="promotions.css" />
+
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <template id="__bundler_thumbnail" data-bg-color="#ffffff">
+    <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fd65af" />
+          <stop offset="100%" stop-color="#fe8377" />
+        </linearGradient>
+      </defs>
+      <rect x="40" y="40" width="160" height="160" rx="28" fill="url(#g)" />
+      <!-- Gift / promo glyph -->
+      <rect x="84" y="108" width="72" height="56" rx="6" fill="#fff" />
+      <rect x="84" y="92" width="72" height="20" rx="4" fill="#fff" />
+      <rect x="114" y="92" width="12" height="72" fill="#fd65af" />
+      <path d="M120 92 q-14 -22 -28 -10 q-6 6 0 12 q14 6 28 -2" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" />
+      <path d="M120 92 q14 -22 28 -10 q6 6 0 12 q-14 6 -28 -2" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" />
+    </svg>
+  </template>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- External JSX files: these don't reference any image/font assets in their JS strings -->
+  <script type="text/babel" src="../ui_kits/admin/Common.jsx"></script>
+  <script type="text/babel" src="../ui_kits/admin/Shell.jsx"></script>
+  <script type="text/babel" src="FormPrimitives.jsx"></script>
+  <script type="text/babel" src="ProductCatalog.jsx"></script>
+  <script type="text/babel" src="ProductPicker.jsx"></script>
+  <script type="text/babel" src="PreviewPanel.jsx"></script>
+  <script type="text/babel" src="PromotionForm.jsx"></script>
+
+  <!--
+    app.jsx is INLINED here (not loaded from file) because it hard-codes
+    eight relative asset paths that won't resolve in a standalone bundle.
+    Every asset URL below points at window.__resources, populated by the
+    bundler from the meta tags in <head>.
+  -->
+  <script type="text/babel">
+    const LOCAL_MODULES = [
+      { id: "marketing",   label: "Marketing",  icon: window.__resources.modMarketing },
+      { id: "sales",       label: "Sales",      icon: window.__resources.modSales },
+      { id: "storage",     label: "Kho vận",    icon: window.__resources.modStorage },
+      { id: "buy",         label: "Mua hàng",   icon: window.__resources.modBuy },
+      { id: "account",     label: "Kế toán",    icon: window.__resources.modAccount },
+      { id: "cash",        label: "Cửa hàng",   icon: window.__resources.modCash },
+      { id: "job",         label: "Công việc",  icon: window.__resources.modJob },
+      { id: "customer",    label: "Khách hàng", icon: window.__resources.modCustomer },
+      { id: "employee",    label: "Nhân sự",    icon: window.__resources.modEmployee },
+      { id: "production",  label: "Sản xuất",   icon: window.__resources.modUtilities },
+      { id: "report",      label: "Báo cáo",    icon: window.__resources.modReport },
+    ];
+
+    function LocalSidebar({ active, onSelect }) {
+      return (
+        <aside className="ssidebar">
+          <div className="ssidebar__logo">
+            <img src={window.__resources.logoPrimary} alt="SandBox" />
+          </div>
+          <nav className="ssidebar__nav">
+            {LOCAL_MODULES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={"smod " + (m.id === active ? "smod--active" : "")}
+                onClick={() => onSelect(m.id)}
+                title={m.label}
+              >
+                <span className="smod__sticker" />
+                <img src={m.icon} alt="" />
+                <span className="smod__label">{m.label}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+      );
+    }
+
+    function LocalTopNav() {
+      return (
+        <header className="stopnav">
+          <button className="stopnav__hamb" title="Menu"><i className="ph ph-list" /></button>
+          <div className="stopnav__spacer" />
+
+          <div className="stopnav__item stopnav__item--notif">
+            <span className="stopnav__bell">
+              <i className="ph ph-bell" />
+              <span className="badge-count">4</span>
+            </span>
+            Thông báo hệ thống
+          </div>
+          <div className="stopnav__item">
+            <i className="ph ph-globe" />
+            Website đặt chỗ
+          </div>
+          <div className="stopnav__item stopnav__item--brand">
+            <i className="ph ph-storefront" />
+            Chi nhánh Cầu Giấy
+            <i className="ph ph-caret-down" />
+          </div>
+
+          <div className="stopnav__icons">
+            <span className="stopnav__icobtn">
+              <i className="ph ph-bell" />
+              <span className="badge-count">4</span>
+            </span>
+            <span className="stopnav__icobtn"><i className="ph ph-rocket-launch" /></span>
+          </div>
+
+          <div className="stopnav__profile">
+            <Avatar src={window.__resources.avatar04} name="Nguyễn Văn An" size={36} />
+            <div>
+              <div className="stopnav__profile-n">Nguyễn Văn An</div>
+              <div className="stopnav__profile-r">Admin đơn vị</div>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function App() {
+      const [active, setActive] = React.useState("marketing");
+      return (
+        <div className="sshell">
+          <LocalSidebar active={active} onSelect={setActive} />
+          <div className="sshell__main">
+            <LocalTopNav />
+            <main className="sshell__work">
+              <PromotionForm />
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("app"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

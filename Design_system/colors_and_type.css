@@ -1,0 +1,343 @@
+/* =========================================================
+   SandboxVN Design System — Color, Type & Foundations
+   ---------------------------------------------------------
+   Inter is the only typeface in the system. We load it from
+   Google Fonts because no .ttf was shipped with the Figma file.
+   Substitution flag: this matches the Figma `Inter` family
+   1:1, so it's a true match — not a fallback.
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* ---------- Brand ---------- */
+  --brand-pink: #fd65af;
+  --brand-coral: #fe8377;
+  --brand-gradient: linear-gradient(180deg, var(--brand-pink) 0%, var(--brand-coral) 100%);
+  --brand-gradient-h: linear-gradient(90deg, var(--brand-pink) 0%, var(--brand-coral) 100%);
+
+  /* ---------- Foreground (text) ---------- */
+  --fg-base: #3a3a4c;         /* primary text — deep slate-navy */
+  --fg-secondary: #9a9ab4;    /* secondary / labels / disabled */
+  --fg-on-brand: #ffffff;
+  --fg-link: #0069e1;
+  --fg-required: #ff4b4b;
+
+  /* ---------- Stroke ---------- */
+  --stroke-base: #f0f0f0;
+  --stroke-medium: #dfdfdf;
+  --stroke-dashed-doc: #8a38f5; /* documentation-only dashed border in Figma — do not ship */
+
+  /* ---------- Surface ---------- */
+  --surface-canvas: #dce5ee;          /* powder-blue workspace gutter */
+  --surface-card: #ffffff;
+  --surface-muted: #f8f8f8;
+  --surface-table-header: #f1f2f3;
+  --surface-highlight: #e8eff6;
+  --surface-pink: #ffedf6;
+
+  /* ---------- Positive accents ---------- */
+  --color-purple: #ad56f4;
+  --color-purple-bg: #e6e5ff;
+  --color-blue-2: #00aed0;
+  --color-blear: #16c3c3;
+  --color-blear-bg: #ddfbfb;
+  --color-blue: #0069e1;
+  --color-blue-bg: #e7f5ff;
+  --color-green: #068b00;
+  --color-green-bg: #e6ffea;
+  --color-dark-purple: #b20089;
+  --color-dark-purple-bg: #ffe1f8;
+
+  /* ---------- Negative accents ---------- */
+  --color-red: #ff4b4b;
+  --color-red-bg: #ffefef;
+  --color-yellow: #cc9900;
+  --color-yellow-bg: #fef7e4;
+  --color-orange-1: #fe9129;
+  --color-orange-2: #f04c04;
+  --color-orange-bg: #ffe0ca;
+  --color-orange-gradient: linear-gradient(180deg, #fe9129 0%, #f04c04 100%);
+
+  /* ---------- Type tokens ---------- */
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Sizes (px values from Figma — verbatim) */
+  --fs-display: 36px;     /* page hero */
+  --fs-page:    24px;     /* page section title */
+  --fs-section: 32px;     /* guideline-page H2 */
+  --fs-large:   18px;     /* card title */
+  --fs-base:    14px;     /* default UI text */
+  --fs-small:   12px;     /* captions, chips, table cells */
+  --fs-xsmall:  10px;     /* counter badges */
+  --fs-tiny:    8px;
+
+  /* Weights */
+  --fw-regular: 400;   /* @kind font */
+  --fw-medium: 500;    /* @kind font */
+  --fw-semibold: 600;  /* @kind font */
+  --fw-bold: 700;      /* @kind font */
+  --fw-extrabold: 800; /* @kind font */
+
+  /* Line-height — Figma uses 100% everywhere. We relax body to 1.4. */
+  --lh-tight: 1;    /* @kind font */
+  --lh-snug: 1.2;   /* @kind font */
+  --lh-body: 1.4;   /* @kind font */
+
+  --tracking-base: 0.005em;
+
+  /* ---------- Spacing — 4px grid ---------- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-25: 100px;
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 2px;       /* outer document frame */
+  --radius-sm: 4px;       /* chips, pills, status tags */
+  --radius-md: 5px;       /* container demo boxes, popovers */
+  --radius-lg: 8px;       /* buttons, inputs, sidebar tiles */
+  --radius-pill: 41px;    /* counter badges, pagination pills */
+  --radius-full: 999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-card:    0 1px 2px rgba(58, 58, 76, 0.06);
+  --shadow-popover: 0 8px 24px rgba(58, 58, 76, 0.12);
+  --shadow-modal:   0 16px 48px rgba(58, 58, 76, 0.18);
+  --shadow-focus:   0 0 0 2px rgba(253, 101, 175, 0.4);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --dur-fast: 120ms;   /* @kind other */
+  --dur-base: 180ms;   /* @kind other */
+  --dur-slow: 240ms;   /* @kind other */
+  --dur-modal: 320ms;  /* @kind other */
+}
+
+/* =========================================================
+   Semantic element styles
+   ========================================================= */
+
+html, body {
+  font-family: var(--font-family);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-base);
+  color: var(--fg-base);
+  background: var(--surface-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, p { margin: 0; }
+
+h1 {
+  font-size: var(--fs-display);
+  font-weight: var(--fw-extrabold);
+  line-height: var(--lh-tight);
+}
+h2 {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+h3 {
+  font-size: var(--fs-page);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+}
+h4 {
+  font-size: var(--fs-large);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+}
+
+/* =========================================================
+   Utility classes
+   ========================================================= */
+
+.t-display     { font-size: var(--fs-display); font-weight: var(--fw-extrabold); line-height: var(--lh-tight); }
+.t-page        { font-size: var(--fs-page);    font-weight: var(--fw-medium);    line-height: var(--lh-tight); }
+.t-section     { font-size: var(--fs-section); font-weight: var(--fw-bold);      line-height: var(--lh-tight); }
+.t-large-strong { font-size: var(--fs-large);  font-weight: var(--fw-bold);      line-height: var(--lh-snug); }
+.t-large       { font-size: var(--fs-large);   font-weight: var(--fw-regular);   line-height: var(--lh-snug); }
+.t-large-medium { font-size: var(--fs-large);  font-weight: var(--fw-medium);    line-height: var(--lh-snug); }
+.t-base-strong { font-size: var(--fs-base);    font-weight: var(--fw-bold);      line-height: var(--lh-body); }
+.t-base-medium { font-size: var(--fs-base);    font-weight: var(--fw-medium);    line-height: var(--lh-body); }
+.t-base        { font-size: var(--fs-base);    font-weight: var(--fw-regular);   line-height: var(--lh-body); }
+.t-small-medium { font-size: var(--fs-small);  font-weight: var(--fw-medium);    line-height: var(--lh-body); }
+.t-small       { font-size: var(--fs-small);   font-weight: var(--fw-regular);   line-height: var(--lh-body); }
+.t-xsmall      { font-size: var(--fs-xsmall);  font-weight: var(--fw-regular);   line-height: var(--lh-tight); }
+
+.t-secondary { color: var(--fg-secondary); }
+.t-required  { color: var(--fg-required); }
+
+/* Backgrounds */
+.bg-brand        { background: var(--brand-gradient); color: var(--fg-on-brand); }
+.bg-canvas       { background: var(--surface-canvas); }
+.bg-card         { background: var(--surface-card); }
+.bg-muted        { background: var(--surface-muted); }
+.bg-highlight    { background: var(--surface-highlight); }
+.bg-pink         { background: var(--surface-pink); }
+.bg-table-header { background: var(--surface-table-header); }
+
+/* Strokes */
+.b-base   { border: 1px solid var(--stroke-base); }
+.b-medium { border: 1px solid var(--stroke-medium); }
+
+/* Radii helpers */
+.r-sm { border-radius: var(--radius-sm); }
+.r-md { border-radius: var(--radius-md); }
+.r-lg { border-radius: var(--radius-lg); }
+
+/* =========================================================
+   Component primitives
+   ========================================================= */
+
+/* ----- Buttons ----- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  font-family: inherit;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--fg-base);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              filter var(--dur-fast) var(--ease-out),
+              transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+.btn:hover { background: var(--surface-pink); }
+.btn:active { transform: scale(0.98); }
+
+.btn--primary {
+  background: var(--brand-gradient);
+  color: var(--fg-on-brand);
+  border-color: transparent;
+}
+.btn--primary:hover { filter: brightness(0.96); background: var(--brand-gradient); }
+
+.btn--ghost {
+  background: transparent;
+  color: var(--brand-pink);
+}
+.btn--ghost:hover { background: var(--surface-pink); }
+
+.btn--outline {
+  background: var(--surface-card);
+  border-color: var(--stroke-medium);
+}
+
+.btn--icon { width: 40px; padding: 0; }
+
+/* ----- Field ----- */
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 4px var(--space-3);
+  background: var(--surface-card);
+  border: 1px solid var(--stroke-base);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-base);
+  color: var(--fg-base);
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+.field:focus-within {
+  border-color: var(--brand-pink);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+.field__input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+.field__input::placeholder { color: var(--fg-secondary); }
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-base);
+  color: var(--fg-base);
+}
+
+/* ----- Status pill ----- */
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+}
+.status--green  { background: var(--color-green-bg);       color: var(--color-green); }
+.status--blue   { background: var(--color-blue-bg);        color: var(--color-blue); }
+.status--purple { background: var(--color-purple-bg);      color: var(--color-purple); }
+.status--red    { background: var(--color-red-bg);         color: var(--color-red); }
+.status--yellow { background: var(--color-yellow-bg);      color: var(--color-yellow); }
+.status--orange { background: var(--color-orange-bg);      color: var(--color-orange-2); }
+.status--cyan   { background: var(--color-blear-bg);       color: var(--color-blear); }
+.status--magenta { background: var(--color-dark-purple-bg); color: var(--color-dark-purple); }
+.status--gray   { background: var(--surface-table-header); color: var(--fg-secondary); }
+
+/* ----- Counter badge (the small "4" notification dot) ----- */
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-gradient);
+  color: var(--fg-on-brand);
+  font-size: var(--fs-xsmall);
+  font-weight: var(--fw-regular);
+  line-height: 1;
+}
+
+/* ----- Card ----- */
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--stroke-base);
+  border-radius: var(--radius-md);
+}
+
+/* ----- Avatar ----- */
+.avatar {
+  display: inline-block;
+  width: 40px; height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--surface-muted) center/cover no-repeat;
+  flex-shrink: 0;
+}
+.avatar--sm { width: 24px; height: 24px; }
+.avatar--xs { width: 20px; height: 20px; }

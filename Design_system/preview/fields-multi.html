@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Fields — multi-people" subtitle="Single, multi-people, tag chips" viewport="700x280" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>People fields</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: #fff; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .field { min-height: 40px; padding: 4px 12px; display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--stroke-base); border-radius: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 4px 0 4px; background: #fff; }
+  .pill .av { width: 20px; height: 20px; border-radius: 50%; background-size: cover; }
+  .pill.chip { padding: 4px 8px; background: #f8f8f8; border: 1px solid #f0f0f0; border-radius: 4px; height: 23px; font-size: 12px; }
+  .x { width: 12px; height: 12px; border-radius: 50%; background: #ea0000; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 8px; }
+  .sep { width: 1px; height: 24px; background: var(--stroke-medium); }
+  .label { font-size: 11px; color: var(--fg-secondary); font-weight: 500; margin-bottom: 6px; }
+  i.ph { font-size: 16px; color: var(--fg-base); }
+</style></head>
+<body>
+  <div>
+    <div class="label">people</div>
+    <div class="row">
+      <div class="field">
+        <span class="av" style="width:20px;height:20px;border-radius:50%;background:url(../assets/avatars/avatar-04.jpg) center/cover"></span>
+        <span class="t-base">Nguyễn Thị An</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div class="label">multi-people (avatars + remove)</div>
+    <div class="row">
+      <div class="field">
+        <i class="ph ph-plus"></i>
+        <span class="pill"><span class="av" style="background:url(../assets/avatars/avatar-04.jpg) center/cover"></span><span class="t-small">Nguyễn Thị An</span><span class="x"><i class="ph ph-x"></i></span></span>
+        <span class="sep"></span>
+        <span class="pill"><span class="av" style="background:url(../assets/avatars/avatar-01.jpg) center/cover"></span><span class="t-small">Phạm Văn Bình</span><span class="x"><i class="ph ph-x"></i></span></span>
+        <i class="ph ph-plus"></i>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div class="label">multi-tags</div>
+    <div class="row">
+      <div class="field">
+        <i class="ph ph-plus"></i>
+        <span class="pill chip">Nguyễn Thị An <span class="x"><i class="ph ph-x"></i></span></span>
+        <span class="pill chip">Phạm Văn Bình <span class="x"><i class="ph ph-x"></i></span></span>
+        <i class="ph ph-plus"></i>
+      </div>
+    </div>
+  </div>
+</body></html>

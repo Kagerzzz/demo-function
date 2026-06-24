@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Text colors" subtitle="Slate-navy base + cool grey secondary" viewport="700x170" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Text colors</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .cell { border: 1px solid var(--stroke-base); border-radius: 8px; padding: 14px 16px; }
+  .swatch { width: 100%; height: 36px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--stroke-base); }
+  .name { font-weight: 700; font-size: 13px; }
+  .role { color: var(--fg-secondary); font-size: 12px; margin-top: 2px; }
+  .hex { font-size: 12px; font-family: ui-monospace, monospace; margin-top: 6px; color: var(--fg-base); }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell">
+      <div class="swatch" style="background:#3a3a4c"></div>
+      <div class="name" style="color:#3a3a4c">fg-base</div>
+      <div class="role">primary text</div>
+      <div class="hex">#3a3a4c</div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#9a9ab4"></div>
+      <div class="name" style="color:#9a9ab4">fg-secondary</div>
+      <div class="role">labels · captions · disabled</div>
+      <div class="hex">#9a9ab4</div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#ff4b4b"></div>
+      <div class="name" style="color:#ff4b4b">fg-required</div>
+      <div class="role">required-field asterisk *</div>
+      <div class="hex">#ff4b4b</div>
+    </div>
+  </div>
+</body></html>

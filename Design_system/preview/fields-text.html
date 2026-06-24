@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Fields — text" subtitle="Default · filled · focused" viewport="700x280" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Fields</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: #fff; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .row + .row { margin-top: 14px; }
+  .field { width: 220px; }
+  .label { font-size: 11px; color: var(--fg-secondary); font-weight: 500; margin-bottom: 6px; }
+  i.ph { font-size: 18px; color: var(--fg-base); }
+</style></head>
+<body>
+  <div>
+    <div class="label">default / placeholder</div>
+    <div class="row">
+      <div class="field"><i class="ph ph-plus"></i><input class="field__input" placeholder="Sắp xếp theo"><i class="ph ph-plus"></i></div>
+      <div class="field"><i class="ph ph-magnifying-glass"></i><input class="field__input" placeholder="Tìm khách hàng"></div>
+    </div>
+  </div>
+  <div style="margin-top:18px">
+    <div class="label">filled</div>
+    <div class="row">
+      <div class="field"><i class="ph ph-user"></i><span class="t-base">Nguyễn Thị An</span></div>
+      <div class="field"><i class="ph ph-calendar"></i><span class="t-base">08/04/2025</span><i class="ph ph-caret-down"></i></div>
+    </div>
+  </div>
+  <div style="margin-top:18px">
+    <div class="label">focused</div>
+    <div class="row">
+      <div class="field" style="border-color:var(--brand-pink); box-shadow:var(--shadow-focus)"><i class="ph ph-magnifying-glass" style="color:var(--brand-pink)"></i><input class="field__input" placeholder="Đang nhập…" autofocus></div>
+    </div>
+  </div>
+</body></html>

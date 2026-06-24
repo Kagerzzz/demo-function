@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Badges" subtitle="Counter · error · presence" viewport="700x150" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Badges</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: #fff; }
+  .row { display: flex; align-items: center; gap: 26px; }
+  .icon-wrap { position: relative; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; }
+  .icon-wrap i.ph { font-size: 20px; color: var(--fg-base); }
+  .icon-wrap .badge-count { position: absolute; top: -2px; right: -4px; }
+  .group { display: inline-flex; align-items: center; gap: 8px; }
+  .label { font-size: 11px; color: var(--fg-secondary); margin-top: 8px; font-family: ui-monospace, monospace; }
+</style></head>
+<body>
+  <div class="row">
+    <div>
+      <span class="icon-wrap"><i class="ph ph-bell"></i><span class="badge-count">4</span></span>
+      <div class="label">bell + count</div>
+    </div>
+    <div>
+      <span class="icon-wrap"><i class="ph ph-envelope"></i><span class="badge-count">12</span></span>
+      <div class="label">two-digit</div>
+    </div>
+    <div>
+      <span class="icon-wrap"><i class="ph ph-shopping-cart"></i><span class="badge-count">99+</span></span>
+      <div class="label">overflow</div>
+    </div>
+    <div>
+      <span class="badge-count" style="background:#ea0000">!</span>
+      <div class="label">error dot</div>
+    </div>
+    <div>
+      <span class="badge-count" style="background:var(--color-green); height:8px; width:8px; min-width:8px; padding:0"></span>
+      <div class="label">presence</div>
+    </div>
+  </div>
+</body></html>

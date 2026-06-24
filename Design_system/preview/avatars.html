@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Avatars" subtitle="Sizes + stacked overflow" viewport="700x210" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Avatars</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 22px; background: #fff; }
+  .label { font-size: 11px; color: var(--fg-secondary); font-weight: 500; margin-bottom: 8px; }
+  .row { display: flex; gap: 12px; align-items: center; }
+  .row + .meta { margin-top: 4px; }
+  .meta { font-size: 11px; color: var(--fg-secondary); font-family: ui-monospace, monospace; margin-bottom: 16px; }
+  .av { background-size: cover; background-position: center; background-color: #f0f0f0; }
+  .stack { display: flex; }
+  .stack .av { border: 2px solid #fff; margin-left: -10px; }
+  .stack .av:first-child { margin-left: 0; }
+  .more { display: inline-flex; align-items: center; justify-content: center; background: var(--surface-table-header); color: var(--fg-base); font-size: 12px; font-weight: 600; }
+</style></head>
+<body>
+  <div class="label">sizes</div>
+  <div class="row">
+    <span class="av" style="width:48px;height:48px;border-radius:50%;background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+    <span class="av" style="width:40px;height:40px;border-radius:50%;background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+    <span class="av" style="width:32px;height:32px;border-radius:50%;background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+    <span class="av" style="width:24px;height:24px;border-radius:50%;background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+    <span class="av" style="width:20px;height:20px;border-radius:50%;background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+  </div>
+  <div class="meta">48 · 40 (nav default) · 32 (tables) · 24 (fields) · 20 (inline)</div>
+
+  <div class="label">stack with overflow</div>
+  <div class="row">
+    <div class="stack">
+      <span class="av" style="width:32px;height:32px;border-radius:50%;background-image:url(../assets/avatars/avatar-01.jpg)"></span>
+      <span class="av" style="width:32px;height:32px;border-radius:50%;background-image:url(../assets/avatars/avatar-02.jpg)"></span>
+      <span class="av" style="width:32px;height:32px;border-radius:50%;background-image:url(../assets/avatars/avatar-03.jpg)"></span>
+      <span class="av more" style="width:32px;height:32px;border-radius:50%;border:2px solid #fff;margin-left:-10px">+4</span>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Table row" subtitle="Checkbox · date · people · status" viewport="700x180" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Table row</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 22px; background: #fff; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { background: var(--surface-table-header); color: var(--fg-base); padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px; border-bottom: 1px solid var(--stroke-base); }
+  .tbl td { padding: 10px; border-bottom: 1px solid var(--stroke-base); font-size: 12px; vertical-align: middle; }
+  .chk { width: 16px; height: 16px; border: 1.5px solid var(--stroke-medium); border-radius: 3px; display: inline-block; }
+  .chk.on { background: var(--brand-gradient-h); border-color: transparent; position: relative; }
+  .chk.on::after { content: ""; position: absolute; left: 5px; top: 1px; width: 4px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .date-cell { display: inline-flex; flex-direction: column; align-items: center; padding: 3px 6px; border-radius: 4px; line-height: 1.1; }
+  .date-cell .d { font-size: 18px; font-weight: 700; }
+  .date-cell .m { font-size: 10px; background: var(--color-blue); color: #fff; padding: 1px 4px; border-radius: 2px; margin-top: 2px; }
+  .av { width: 24px; height: 24px; border-radius: 50%; background-size: cover; display: inline-block; vertical-align: middle; }
+  .stack { display: inline-flex; }
+  .stack .av { border: 2px solid #fff; margin-left: -8px; }
+  .stack .av:first-child { margin-left: 0; }
+  .more { background: var(--surface-table-header); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .person { display: inline-flex; align-items: center; gap: 6px; }
+  .act { color: var(--fg-secondary); }
+  .act i.ph { font-size: 14px; margin: 0 4px; cursor: pointer; }
+</style></head>
+<body>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th style="width:36px"><span class="chk"></span></th>
+        <th>Mã</th>
+        <th>Tên</th>
+        <th>Ngày tạo</th>
+        <th>Phòng ban</th>
+        <th>Phụ trách</th>
+        <th>Người tạo</th>
+        <th>Trạng thái</th>
+        <th style="width:80px;text-align:right">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="chk on"></span></td>
+        <td>KH-00231</td>
+        <td>Công ty Cổ phần Hồng Hà</td>
+        <td>
+          <span class="date-cell">
+            <span class="d">06</span>
+            <span class="m">Thứ 2 · Tháng 04</span>
+          </span>
+        </td>
+        <td>Kinh doanh 1</td>
+        <td>
+          <span class="stack">
+            <span class="av" style="background-image:url(../assets/avatars/avatar-01.jpg)"></span>
+            <span class="av" style="background-image:url(../assets/avatars/avatar-02.jpg)"></span>
+            <span class="av" style="background-image:url(../assets/avatars/avatar-03.jpg)"></span>
+            <span class="av more">+4</span>
+          </span>
+        </td>
+        <td>
+          <span class="person">
+            <span class="av" style="background-image:url(../assets/avatars/avatar-04.jpg)"></span>
+            Nguyễn Văn An
+          </span>
+        </td>
+        <td><span class="status status--green">Hoạt động</span></td>
+        <td class="act" style="text-align:right"><i class="ph ph-pencil-simple"></i><i class="ph ph-caret-down"></i></td>
+      </tr>
+    </tbody>
+  </table>
+</body></html>

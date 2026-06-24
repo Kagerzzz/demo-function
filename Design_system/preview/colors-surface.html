@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Surface & stroke" subtitle="Canvas · card · muted · strokes" viewport="700x240" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Surface & stroke</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 20px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cell { border: 1px solid var(--stroke-base); border-radius: 8px; padding: 10px 12px; min-height: 96px; display: flex; flex-direction: column; justify-content: space-between; }
+  .swatch { width: 100%; height: 36px; border-radius: 4px; border: 1px solid var(--stroke-base); }
+  .name { font-weight: 700; font-size: 12px; }
+  .role { color: var(--fg-secondary); font-size: 11px; }
+  .hex { font-size: 11px; font-family: ui-monospace, monospace; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell">
+      <div class="swatch" style="background:#dce5ee"></div>
+      <div>
+        <div class="name">canvas</div>
+        <div class="role">workspace gutter</div>
+        <div class="hex">#dce5ee</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#ffffff"></div>
+      <div>
+        <div class="name">card</div>
+        <div class="role">panel surface</div>
+        <div class="hex">#ffffff</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#f8f8f8"></div>
+      <div>
+        <div class="name">muted</div>
+        <div class="role">subtle fill</div>
+        <div class="hex">#f8f8f8</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#f1f2f3"></div>
+      <div>
+        <div class="name">table-hdr</div>
+        <div class="role">table headers</div>
+        <div class="hex">#f1f2f3</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#e8eff6"></div>
+      <div>
+        <div class="name">highlight</div>
+        <div class="role">hover fill</div>
+        <div class="hex">#e8eff6</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#ffedf6"></div>
+      <div>
+        <div class="name">pink</div>
+        <div class="role">ghost-btn hover</div>
+        <div class="hex">#ffedf6</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#f0f0f0"></div>
+      <div>
+        <div class="name">stroke-base</div>
+        <div class="role">hairline border</div>
+        <div class="hex">#f0f0f0</div>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="swatch" style="background:#dfdfdf"></div>
+      <div>
+        <div class="name">stroke-med</div>
+        <div class="role">stronger border</div>
+        <div class="hex">#dfdfdf</div>
+      </div>
+    </div>
+  </div>
+</body></html>

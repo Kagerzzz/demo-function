@@ -1,0 +1,7 @@
+/* =========================================================
+   SandboxVN Design System — root entry stylesheet
+   Consumers can link this single file to pull in the whole
+   system. It re-exports the token + component foundations.
+   ========================================================= */
+
+@import url("./colors_and_type.css");

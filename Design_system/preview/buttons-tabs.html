@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Components" name="Buttons — tabs" subtitle="Filter tabs with gradient-active" viewport="700x180" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Tab buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  html, body { margin: 0; padding: 24px; background: #fff; }
+  .grp { display: flex; align-items: stretch; border: 1px solid var(--stroke-base); border-radius: 6px; overflow: hidden; height: 40px; }
+  .grp > button { border: 0; background: transparent; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1 "Inter", sans-serif; color: var(--fg-base); cursor: pointer; letter-spacing: 0.005em; }
+  .grp > button:not(:last-child) { border-right: 1px solid var(--stroke-base); }
+  .grp > button.active { background: var(--brand-gradient-h); color: #fff; }
+  .grp.secondary > button.active { color: var(--brand-pink); background: transparent; }
+  .grp.secondary { border: 0; }
+  .grp.secondary > button:not(:last-child) { border-right: 1px solid var(--stroke-base); }
+  .stack { display: flex; gap: 22px; align-items: center; }
+  .label { font-size: 11px; color: var(--fg-secondary); font-weight: 500; margin-bottom: 6px; }
+  i.ph { font-size: 18px; }
+</style></head>
+<body>
+  <div class="stack">
+    <div>
+      <div class="label">Button tab</div>
+      <div class="grp">
+        <button><i class="ph ph-caret-down"></i>Phòng ban<i class="ph ph-caret-down"></i></button>
+        <button class="active"><i class="ph ph-caret-down"></i>Phòng ban<i class="ph ph-caret-down"></i></button>
+      </div>
+    </div>
+    <div>
+      <div class="label">Secondary tab</div>
+      <div class="grp secondary">
+        <button><i class="ph ph-caret-down"></i>Phòng ban<i class="ph ph-caret-down"></i></button>
+        <button class="active"><i class="ph ph-caret-down"></i>Phòng ban<i class="ph ph-caret-down"></i></button>
+      </div>
+    </div>
+  </div>
+</body></html>

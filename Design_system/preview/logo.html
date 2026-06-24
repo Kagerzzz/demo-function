@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Logo lockup" subtitle="Color + reverse on brand" viewport="700x200" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Logo</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 22px; background: #fff; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel { padding: 22px 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-height: 110px; }
+  .panel.light { background: #fff; border: 1px solid var(--stroke-base); }
+  .panel.brand { background: var(--brand-gradient-h); }
+  .panel img { height: 56px; width: auto; }
+  .label { font-size: 11px; color: var(--fg-secondary); font-family: ui-monospace, monospace; margin-top: 8px; text-align: center; }
+</style></head>
+<body>
+  <div class="row">
+    <div>
+      <div class="panel light"><img src="../assets/logo-primary.png" alt="SandBox"></div>
+      <div class="label">logo-primary.png · on light</div>
+    </div>
+    <div>
+      <div class="panel brand"><img src="../assets/logo-white.png" alt="SandBox" style="filter: drop-shadow(0 0 0 #fff)"></div>
+      <div class="label">logo-white.png · on brand gradient</div>
+    </div>
+  </div>
+</body></html>

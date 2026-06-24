@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Colors" name="Negative accents" subtitle="Red · yellow · orange" viewport="700x160" -->
+<html lang="en">
+<head><meta charset="utf-8"><title>Negative accents</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 20px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; gap: 4px; }
+  .pair { display: flex; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--stroke-base); }
+  .pair > div { flex: 1; }
+  .name { font-weight: 700; font-size: 13px; }
+  .meta { font-size: 12px; color: var(--fg-secondary); font-family: ui-monospace, monospace; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="cell"><div class="pair"><div style="background:#ff4b4b"></div><div style="background:#ffefef"></div></div><div class="name">Red</div><div class="meta">#ff4b4b / #ffefef</div></div>
+    <div class="cell"><div class="pair"><div style="background:#cc9900"></div><div style="background:#fef7e4"></div></div><div class="name">Yellow</div><div class="meta">#cc9900 / #fef7e4</div></div>
+    <div class="cell"><div class="pair"><div style="background:linear-gradient(180deg,#fe9129,#f04c04)"></div><div style="background:#ffe0ca"></div></div><div class="name">Orange</div><div class="meta">#fe9129→#f04c04 / #ffe0ca</div></div>
+  </div>
+</body></html>
