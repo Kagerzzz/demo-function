@@ -1707,14 +1707,43 @@
                     </label>
                 </div>
 
+                <!-- Sử dụng quyền riêng (Chỉ hiển thị cho thư mục/tệp con) -->
+                <div class="inherit-card" id="customPermsCard" style="display: none; margin-top: 10px;">
+                    <div class="inherit-info">
+                        <span class="inherit-title">Sử dụng quyền riêng</span>
+                        <span class="inherit-desc">Bật để tùy chỉnh và nâng cấp quyền hạn cho tệp/thư mục con này.</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="customPermsToggle" onchange="toggleCustomPermissions()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
                 <!-- 2. Chọn phạm vi/chế độ phân quyền (Chỉ hiển thị khi tắt kế thừa) -->
                 <div class="form-group" id="scopeContainer" style="display: none;">
                     <label class="form-label" for="scopeSelect">Phạm vi truy cập</label>
                     <select id="scopeSelect" class="form-input" style="background: white;" onchange="changeScope(this.value)">
-                        <option value="PRIVATE">🔒 Riêng tư (Chỉ mình tôi và admin tổng)</option>
+                        <option value="PRIVATE">🔒 Riêng tư (chỉ mình tôi)</option>
                         <option value="RESTRICTED">👥 Giới hạn (Chỉ các thành viên được gán quyền cụ thể)</option>
-                        <option value="PUBLIC">🌐 Công khai (Toàn bộ nhân sự trong công ty)</option>
+                        <option value="PUBLIC">🌐 Công khai (toàn bộ nhân sự trong đơn vị)</option>
                     </select>
+                </div>
+
+                <!-- 4. Cấu hình Quyền Công khai (Chỉ hiển thị ở chế độ CÔNG KHAI) -->
+                <div class="form-group" id="publicRoleContainer" style="display: none; background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md);">
+                    <!-- Ẩn cấu hình phạm vi công khai (mặc định luôn là ORG) -->
+                    <div style="display: none;">
+                        <select id="publicRangeSelect">
+                            <option value="ORG" selected>🏢 Theo đơn vị</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="publicRoleSelect">Quyền mặc định (toàn bộ nhân sự trong đơn vị)</label>
+                        <select id="publicRoleSelect" class="form-input" style="background: white;" onchange="changePublicRole(this.value)">
+                            <option value="VIEW">👁️ Chỉ xem</option>
+                            <option value="EDIT">✏️ Chỉnh sửa</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- 3. Thêm thành viên (Chỉ hiển thị ở chế độ GIỚI HẠN) -->
@@ -1754,15 +1783,6 @@
                     </div>
                     <!-- Danh sách các mục đã chọn để thêm nhanh -->
                     <div id="selectedTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
-                </div>
-
-                <!-- 4. Cấu hình Quyền Công khai (Chỉ hiển thị ở chế độ CÔNG KHAI) -->
-                <div class="form-group" id="publicRoleContainer" style="display: none; background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md);">
-                    <label class="form-label" for="publicRoleSelect">Quyền mặc định của toàn bộ nhân sự</label>
-                    <select id="publicRoleSelect" class="form-input" style="background: white;" onchange="changePublicRole(this.value)">
-                        <option value="VIEW">👁️ Chỉ xem (Mọi người có thể xem và tải về)</option>
-                        <option value="EDIT">✏️ Chỉnh sửa (Mọi người có quyền thêm mới, chỉnh sửa, xóa tệp)</option>
-                    </select>
                 </div>
 
                 <!-- 5. Danh sách đã phân quyền -->
@@ -1990,8 +2010,112 @@
         let selectedSubject = null;
         let popupScope = 'RESTRICTED'; // PRIVATE, RESTRICTED, PUBLIC
         let popupPublicRole = 'VIEW'; // VIEW, EDIT
+        let popupPublicRange = 'ORG'; // ORG, BRANCH
+        let popupPublicBranches = []; // Array of branch IDs (e.g. ['b1', 'b2'])
+        let popupCreatorPermission = 'EDIT'; // VIEW, EDIT
         let editingFileId = null;
         let editingFolderId = null;
+
+        const globalAdminDetails = { name: 'Trần Thị Bình', avatarCode: 'BÌ', role: 'Admin tổng', sub: 'binh.tt@company.com' };
+
+        function getBranchAdminDetails(branchId) {
+            if (branchId === 'b2') { // TP.HCM
+                return { name: 'Phạm Minh Hoàng', avatarCode: 'MH', role: 'Admin Chi nhánh TP.HCM', sub: 'hoang.pm@company.com' };
+            } else if (branchId === 'b3') { // Đà Nẵng
+                return { name: 'Đỗ Thị Mai', avatarCode: 'MA', role: 'Admin Chi nhánh Đà Nẵng', sub: 'mai.dt@company.com' };
+            } else { // Hà Nội
+                return { name: 'Nguyễn Văn An', avatarCode: 'AN', role: 'Admin Chi nhánh Hà Nội', sub: 'an.nv@company.com' };
+            }
+        }
+
+        function getUserRole(name) {
+            if (name.includes('Đức') || name.includes('Tôi') || name.includes('tôi')) return 'Nhân viên sale';
+            if (name.includes('An')) return 'Admin Chi nhánh Hà Nội';
+            if (name.includes('Bình')) return 'Admin tổng';
+            if (name.includes('Giang')) return 'Trưởng phòng Kế toán';
+            if (name.includes('Hoàng')) return 'Admin Chi nhánh TP.HCM';
+            if (name.includes('Mai')) return 'Admin Chi nhánh Đà Nẵng';
+            return 'Nhân viên';
+        }
+
+        function checkCurrentUserHasEditPermission(itemId, targetType) {
+            if (itemId === 'root') return true;
+            const eff = getEffectivePermissions(itemId, targetType);
+            if (eff.permissionScope === 'PRIVATE') {
+                const item = getItem(itemId, targetType);
+                const author = item ? item.author : 'Nguyễn Minh Đức';
+                if (author.includes('Đức') || author.includes('Quản trị')) {
+                    return eff.creatorPermission === 'EDIT';
+                }
+                return false; 
+            }
+            const author = getItem(itemId, targetType)?.author || 'Nguyễn Minh Đức';
+            if (author.includes('Đức') || author.includes('Quản trị')) {
+                const customUser = eff.permissions.find(p => p.name.includes('Đức') || p.name.includes('Quản trị'));
+                if (customUser) {
+                    return customUser.permission === 'EDIT';
+                }
+                return true; 
+            }
+            const customUser = eff.permissions.find(p => p.name.includes('Đức') || p.name.includes('Quản trị'));
+            if (customUser) {
+                return customUser.permission === 'EDIT';
+            }
+            if (eff.permissionScope === 'PUBLIC') {
+                if (eff.publicRange === 'BRANCH') {
+                    const creatorBranch = getAuthorBranch(author);
+                    if (creatorBranch.id === 'b1') { 
+                        return eff.publicRole === 'EDIT';
+                    }
+                    return false;
+                }
+                return eff.publicRole === 'EDIT';
+            }
+            return false;
+        }
+
+        // Mapping helpers to match users and their branches
+        function getAuthorDetails(authorName) {
+            const name = authorName || 'Nguyễn Minh Đức';
+            const matched = availableSubjects.find(sub => 
+                sub.type === 'USER' && (sub.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(sub.name.toLowerCase()))
+            );
+            if (matched) {
+                return {
+                    name: matched.name,
+                    avatarCode: matched.avatarCode,
+                    sub: matched.sub,
+                    type: 'USER'
+                };
+            }
+            if (name.includes('Đức') || name.includes('Quản trị')) {
+                return {
+                    name: 'Nguyễn Minh Đức (tôi)',
+                    avatarCode: 'MĐ',
+                    sub: 'Nhân viên sale',
+                    type: 'USER'
+                };
+            }
+            const parts = name.split(' ');
+            const avatarCode = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : name.substring(0, 2).toUpperCase();
+            return {
+                name: name,
+                avatarCode: avatarCode,
+                sub: getUserRole(name),
+                type: 'USER'
+            };
+        }
+
+        function getAuthorBranch(authorName) {
+            const name = authorName || 'Nguyễn Minh Đức';
+            if (name.includes('Giang')) {
+                return { id: 'b2', name: 'Chi nhánh TP.HCM', avatarCode: 'SG', sub: 'Văn phòng miền Nam' };
+            } else if (name.includes('Bình') || name.includes('Oanh')) {
+                return { id: 'b3', name: 'Chi nhánh Đà Nẵng', avatarCode: 'ĐN', sub: 'Văn phòng miền Trung' };
+            } else {
+                return { id: 'b1', name: 'Chi nhánh Hà Nội', avatarCode: 'HN', sub: 'Trụ sở chính' };
+            }
+        }
 
         // --- HELPER FUNCTIONS FOR PERMISSIONS ---
         function findFileById(fileId) {
@@ -2032,25 +2156,239 @@
         function getEffectivePermissions(itemId, targetType) {
             const item = getItem(itemId, targetType);
             if (!item) {
-                return { isInheriting: false, permissionScope: 'RESTRICTED', permissions: [], publicRole: 'VIEW' };
+                return { isInheriting: false, permissionScope: 'RESTRICTED', permissions: [], publicRole: 'VIEW', publicRange: 'ORG', publicBranches: [], creatorPermission: 'EDIT' };
             }
 
             const parentFolderId = getParentFolderId(itemId, targetType);
 
             if (item.isInheriting && parentFolderId) {
                 const parentEff = getEffectivePermissions(parentFolderId, 'folder');
+                
+                if (!item.useCustomPermissions) {
+                    return {
+                        isInheriting: true,
+                        useCustomPermissions: false,
+                        permissionScope: parentEff.permissionScope,
+                        publicRole: parentEff.publicRole,
+                        publicRange: parentEff.publicRange,
+                        publicBranches: JSON.parse(JSON.stringify(parentEff.publicBranches || [])),
+                        creatorPermission: parentEff.creatorPermission,
+                        permissions: parentEff.permissions.map(p => ({ ...p, isInherited: true }))
+                    };
+                }
+                
+                // Scope
+                let effectiveScope = item.permissionScope || parentEff.permissionScope;
+
+                // Helper to check if parent public config is fully subsumed by child
+                const isParentPublicSubsumed = (pEff, cRole, cRange, cBranches) => {
+                    if (pEff.permissionScope !== 'PUBLIC') return true;
+                    
+                    const pRole = pEff.publicRole || 'VIEW';
+                    const pRange = pEff.publicRange || 'ORG';
+                    const pBranches = pEff.publicBranches || [];
+                    
+                    // 1. Role check: if parent is EDIT but child is VIEW, it's not subsumed.
+                    if (pRole === 'EDIT' && cRole === 'VIEW') {
+                        return false;
+                    }
+                    
+                    // 2. Range check
+                    if (pRange === 'ORG') {
+                        if (cRange !== 'ORG') {
+                            return false;
+                        }
+                    } else if (pRange === 'BRANCH') {
+                        if (cRange === 'BRANCH') {
+                            // All parent branches must be included in child branches
+                            for (const pBr of pBranches) {
+                                if (!cBranches.includes(pBr)) {
+                                    return false;
+                                }
+                            }
+                        }
+                        // If cRange is ORG, it covers all parent branches
+                    }
+                    return true;
+                };
+
+                // Public configurations
+                let effectivePublicRole = 'VIEW';
+                let effectivePublicRange = 'ORG';
+                let effectivePublicBranches = [];
+                let parentPublicNotSubsumed = false;
+
+                if (effectiveScope === 'PUBLIC') {
+                    if (parentEff.permissionScope === 'PUBLIC') {
+                        // Parent is PUBLIC, child is also PUBLIC
+                        let childPublicRole = item.publicRole || parentEff.publicRole || 'VIEW';
+                        const childPublicRange = item.publicRange || parentEff.publicRange || 'ORG';
+                        const childPublicBranches = (item.publicBranches && item.publicBranches.length > 0)
+                            ? item.publicBranches 
+                            : (parentEff.publicBranches || []);
+
+                        // Chặn hạ quyền: Nếu mẹ là EDIT thì con bắt buộc phải là EDIT
+                        if (parentEff.publicRole === 'EDIT') {
+                            childPublicRole = 'EDIT';
+                        }
+
+                        if (isParentPublicSubsumed(parentEff, childPublicRole, childPublicRange, childPublicBranches)) {
+                            effectivePublicRole = childPublicRole;
+                            effectivePublicRange = childPublicRange;
+                            effectivePublicBranches = JSON.parse(JSON.stringify(childPublicBranches));
+                        } else {
+                            // Not fully subsumed: Keep child's own settings as the public face
+                            effectivePublicRole = childPublicRole;
+                            effectivePublicRange = childPublicRange;
+                            effectivePublicBranches = JSON.parse(JSON.stringify(childPublicBranches));
+                            parentPublicNotSubsumed = true;
+                        }
+                    } else {
+                        // Scope upgraded to PUBLIC at child level (parent was RESTRICTED or PRIVATE)
+                        effectivePublicRole = item.publicRole || 'VIEW';
+                        effectivePublicRange = item.publicRange || 'ORG';
+                        effectivePublicBranches = JSON.parse(JSON.stringify(item.publicBranches || []));
+                    }
+                }
+
+                // Creator Permission
+                let effectiveCreatorPermission = parentEff.creatorPermission;
+                if (parentEff.creatorPermission === 'VIEW' && item.creatorPermission === 'EDIT') {
+                    effectiveCreatorPermission = 'EDIT';
+                }
+
+                // Merge parent and child custom permissions
+                const mergedPermissions = [];
+                const childPerms = item.permissions || [];
+
+                // 1. Merge parent custom permissions
+                if (effectiveScope !== 'PRIVATE' && parentEff.permissionScope !== 'PRIVATE') {
+                    parentEff.permissions.forEach(parentPerm => {
+                        const childOverride = childPerms.find(cp => cp.id === parentPerm.id);
+                        if (childOverride && parentPerm.permission === 'VIEW' && childOverride.permission === 'EDIT') {
+                            mergedPermissions.push({
+                                ...parentPerm,
+                                permission: 'EDIT',
+                                isInherited: true,
+                                isUpgraded: true
+                            });
+                        } else {
+                            mergedPermissions.push({
+                                ...parentPerm,
+                                isInherited: true
+                            });
+                        }
+                    });
+                }
+
+                // 2. Identify and merge inherited public configurations from parent if not subsumed
+                const inheritedPublicSubjects = [];
+                if (parentPublicNotSubsumed && parentEff.permissionScope === 'PUBLIC') {
+                    if (parentEff.publicRange === 'ORG') {
+                        inheritedPublicSubjects.push({
+                            id: 'public-org-inherited',
+                            name: 'Tất cả nhân sự trong đơn vị',
+                            type: 'GROUP',
+                            permission: parentEff.publicRole,
+                            avatarCode: 'ALL',
+                            sub: 'Kế thừa quyền công khai từ thư mục mẹ'
+                        });
+                    } else if (parentEff.publicRange === 'BRANCH') {
+                        const parentAuthor = parentEff.author || 'Nguyễn Minh Đức';
+                        const parentBranches = parentEff.publicBranches && parentEff.publicBranches.length > 0 
+                            ? parentEff.publicBranches 
+                            : [getAuthorBranch(parentAuthor).id];
+
+                        parentBranches.forEach(brId => {
+                            let needToPreserve = false;
+                            let targetPermission = parentEff.publicRole;
+
+                            if (effectivePublicRange === 'ORG') {
+                                if (effectivePublicRole === 'VIEW' && parentEff.publicRole === 'EDIT') {
+                                    needToPreserve = true;
+                                    targetPermission = 'EDIT';
+                                }
+                            } else if (effectivePublicRange === 'BRANCH') {
+                                if (effectivePublicBranches.includes(brId)) {
+                                    if (effectivePublicRole === 'VIEW' && parentEff.publicRole === 'EDIT') {
+                                        needToPreserve = true;
+                                        targetPermission = 'EDIT';
+                                    }
+                                } else {
+                                    needToPreserve = true;
+                                    targetPermission = parentEff.publicRole;
+                                }
+                            }
+
+                            if (needToPreserve) {
+                                const brSubject = availableSubjects.find(sub => sub.id === brId);
+                                if (brSubject) {
+                                    inheritedPublicSubjects.push({
+                                        id: brId,
+                                        name: brSubject.name,
+                                        type: 'BRANCH',
+                                        permission: targetPermission,
+                                        avatarCode: brSubject.avatarCode,
+                                        sub: `Tất cả nhân sự thuộc ${brSubject.name}`
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Push inherited public subjects
+                inheritedPublicSubjects.forEach(pubSubject => {
+                    const childOverride = childPerms.find(cp => cp.id === pubSubject.id);
+                    if (childOverride && pubSubject.permission === 'VIEW' && childOverride.permission === 'EDIT') {
+                        mergedPermissions.push({
+                            ...pubSubject,
+                            permission: 'EDIT',
+                            isInherited: true,
+                            isUpgraded: true
+                        });
+                    } else {
+                        mergedPermissions.push({
+                            ...pubSubject,
+                            isInherited: true
+                        });
+                    }
+                });
+
+                // 3. Add child-specific added members (excluding parent custom and inherited public duplicates)
+                if (effectiveScope !== 'PRIVATE') {
+                    childPerms.forEach(childPerm => {
+                        const existsInParentCustom = parentEff.permissions.some(pp => pp.id === childPerm.id);
+                        const existsInInheritedPublic = inheritedPublicSubjects.some(ips => ips.id === childPerm.id);
+                        if (!existsInParentCustom && !existsInInheritedPublic || parentEff.permissionScope === 'PRIVATE') {
+                            mergedPermissions.push({
+                                ...childPerm,
+                                isInherited: false
+                            });
+                        }
+                    });
+                }
+
                 return {
                     isInheriting: true,
-                    permissionScope: parentEff.permissionScope,
-                    publicRole: parentEff.publicRole,
-                    permissions: parentEff.permissions.map(p => ({ ...p, isInherited: true }))
+                    useCustomPermissions: true,
+                    permissionScope: effectiveScope,
+                    publicRole: effectivePublicRole,
+                    publicRange: effectivePublicRange,
+                    publicBranches: JSON.parse(JSON.stringify(effectivePublicBranches || [])),
+                    creatorPermission: effectiveCreatorPermission,
+                    permissions: mergedPermissions
                 };
             }
 
             return {
                 isInheriting: !!item.isInheriting,
+                useCustomPermissions: true,
                 permissionScope: item.permissionScope || 'RESTRICTED',
                 publicRole: item.publicRole || 'VIEW',
+                publicRange: item.publicRange || 'ORG',
+                publicBranches: JSON.parse(JSON.stringify(item.publicBranches || [])),
+                creatorPermission: item.creatorPermission || 'EDIT',
                 permissions: (item.permissions || []).map(p => ({ ...p, isInherited: false }))
             };
         }
@@ -2173,6 +2511,10 @@
         // Tắt/mở menu Thêm mới
         function toggleAddNewDropdown(e) {
             e.stopPropagation();
+            if (!checkCurrentUserHasEditPermission(currentActiveFolder, 'folder')) {
+                showToast("Bạn không có quyền chỉnh sửa/thêm mới trong thư mục này!");
+                return;
+            }
             document.getElementById('addNewDropdown').classList.toggle('show');
         }
 
@@ -2325,6 +2667,10 @@
         function submitFileUpload() {
             if (!selectedUploadFile) return;
             const targetFolderId = selectedPickerFolders['upload'] || currentActiveFolder;
+            if (!checkCurrentUserHasEditPermission(targetFolderId, 'folder')) {
+                showToast("Bạn không có quyền chỉnh sửa/thêm mới trong thư mục này!");
+                return;
+            }
             const targetFolder = directories[targetFolderId];
             if (!targetFolder) return;
 
@@ -2382,6 +2728,10 @@
             }
 
             const targetParentId = selectedPickerFolders['folder'] || currentActiveFolder;
+            if (!checkCurrentUserHasEditPermission(targetParentId, 'folder')) {
+                showToast("Bạn không có quyền chỉnh sửa/thêm mới trong thư mục này!");
+                return;
+            }
             const targetParent = directories[targetParentId];
             if (!targetParent) return;
 
@@ -2392,6 +2742,10 @@
                 parentId: targetParentId,
                 subfolders: [],
                 files: [],
+                author: 'Nguyễn Minh Đức',
+                createdTime: new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) + ' ' + new Date().toLocaleDateString('vi-VN'),
+                updatedBy: 'Nguyễn Minh Đức',
+                updatedTime: new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) + ' ' + new Date().toLocaleDateString('vi-VN'),
                 isInheriting: targetParentId !== 'root',
                 permissionScope: targetParentId === 'root' ? 'PRIVATE' : 'RESTRICTED',
                 publicRole: 'VIEW',
@@ -2436,6 +2790,10 @@
 
         function submitEditFolder() {
             if (!editingFolderId) return;
+            if (!checkCurrentUserHasEditPermission(editingFolderId, 'folder')) {
+                showToast("Bạn không có quyền chỉnh sửa thư mục này!");
+                return;
+            }
             const folder = directories[editingFolderId];
             if (!folder) return;
 
@@ -2555,6 +2913,10 @@
             }
 
             const targetFolderId = selectedPickerFolders['doc'] || currentActiveFolder;
+            if (!checkCurrentUserHasEditPermission(targetFolderId, 'folder')) {
+                showToast("Bạn không có quyền chỉnh sửa/thêm mới trong thư mục này!");
+                return;
+            }
             const targetFolder = directories[targetFolderId];
             if (!targetFolder) return;
 
@@ -2629,6 +2991,10 @@
 
         function submitEditDoc() {
             if (!editingFileId) return;
+            if (!checkCurrentUserHasEditPermission(editingFileId, 'file')) {
+                showToast("Bạn không có quyền chỉnh sửa tài liệu này!");
+                return;
+            }
             const file = findFileById(editingFileId);
             if (!file) return;
 
@@ -3025,6 +3391,8 @@
             if (!item) return;
             activeTargetName = item.name;
 
+            const hasEdit = checkCurrentUserHasEditPermission(itemId, itemType);
+
             // Generate content based on type
             let html = '';
             if (itemType === 'folder') {
@@ -3033,7 +3401,7 @@
                         <i data-lucide="folder-open" style="width: 14px; height: 14px;"></i>
                         Mở thư mục
                     </div>
-                    <div class="action-dropdown-item" onclick="handleGlobalAction('edit-folder')">
+                    <div class="action-dropdown-item ${!hasEdit ? 'disabled' : ''}" ${hasEdit ? 'onclick="handleGlobalAction(\'edit-folder\')"' : 'style="opacity: 0.5; cursor: not-allowed;" title="Bạn không có quyền chỉnh sửa"'}>
                         <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
                         Chỉnh sửa
                     </div>
@@ -3042,7 +3410,7 @@
                         Phân quyền
                     </div>
                     <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
-                    <div class="action-dropdown-item danger" onclick="handleGlobalAction('delete-folder')">
+                    <div class="action-dropdown-item danger ${!hasEdit ? 'disabled' : ''}" ${hasEdit ? 'onclick="handleGlobalAction(\'delete-folder\')"' : 'style="opacity: 0.5; cursor: not-allowed;" title="Bạn không có quyền xóa"'}>
                         <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                         Xóa thư mục
                     </div>
@@ -3057,7 +3425,7 @@
                         <i data-lucide="download" style="width: 14px; height: 14px;"></i>
                         Tải xuống
                     </div>
-                    <div class="action-dropdown-item" onclick="handleGlobalAction('edit-file')">
+                    <div class="action-dropdown-item ${!hasEdit ? 'disabled' : ''}" ${hasEdit ? 'onclick="handleGlobalAction(\'edit-file\')"' : 'style="opacity: 0.5; cursor: not-allowed;" title="Bạn không có quyền chỉnh sửa"'}>
                         <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
                         Chỉnh sửa
                     </div>
@@ -3066,7 +3434,7 @@
                         Phân quyền
                     </div>
                     <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
-                    <div class="action-dropdown-item danger" onclick="handleGlobalAction('delete-file')">
+                    <div class="action-dropdown-item danger ${!hasEdit ? 'disabled' : ''}" ${hasEdit ? 'onclick="handleGlobalAction(\'delete-file\')"' : 'style="opacity: 0.5; cursor: not-allowed;" title="Bạn không có quyền xóa"'}>
                         <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                         Xóa tài liệu
                     </div>
@@ -3135,6 +3503,10 @@
 
         // Xóa thư mục
         function deleteFolderToTrash(folderId) {
+            if (!checkCurrentUserHasEditPermission(folderId, 'folder')) {
+                showToast("Bạn không có quyền xóa thư mục này!");
+                return;
+            }
             const parent = directories[currentActiveFolder];
             const idx = parent.subfolders.indexOf(folderId);
             if (idx === -1) return;
@@ -3160,6 +3532,10 @@
 
         // Xóa tệp
         function deleteFileToTrash(fileId) {
+            if (!checkCurrentUserHasEditPermission(fileId, 'file')) {
+                showToast("Bạn không có quyền xóa tài liệu này!");
+                return;
+            }
             const folder = directories[currentActiveFolder];
             const idx = folder.files.findIndex(f => f.id === fileId);
             if (idx === -1) return;
@@ -3445,40 +3821,77 @@
             const inheritNoteContainer = document.getElementById('inheritNoteContainer');
             const scopeSelect = document.getElementById('scopeSelect');
             const publicRoleSelect = document.getElementById('publicRoleSelect');
+            const publicRangeSelect = document.getElementById('publicRangeSelect');
             const saveBtn = document.querySelector('#shareModalOverlay .modal-footer .btn-primary');
 
-            if (!parentFolderId || parentFolderId === 'root') {
-                // Thư mục gốc (root) hoặc thư mục/tệp trực tiếp ở cấp 1 (con của root) -> không thể kế thừa quyền
+            const hasEdit = checkCurrentUserHasEditPermission(itemId, targetType);
+
+            if (!hasEdit) {
+                // Read-only modal
                 inheritCard.style.display = 'none';
-                inheritNoteContainer.style.display = 'none';
-                document.getElementById('inheritToggle').checked = false;
-                item.isInheriting = false;
-
-                scopeSelect.disabled = false;
-                publicRoleSelect.disabled = false;
-                saveBtn.style.display = 'inline-block'; // Hiện nút Lưu
-            } else {
-                // Thư mục con cấp 2 trở đi -> luôn kế thừa quyền từ mẹ
-                inheritCard.style.display = 'none'; // Ẩn switch button
+                const customPermsCard = document.getElementById('customPermsCard');
+                if (customPermsCard) customPermsCard.style.display = 'none';
                 inheritNoteContainer.style.display = 'block';
+                document.getElementById('inheritNoteText').textContent = `Bạn chỉ có quyền xem đối với tài liệu này, không thể thay đổi cấu hình phân quyền.`;
                 
-                const parentFolder = directories[parentFolderId];
-                const parentName = parentFolder ? parentFolder.name : 'Thư mục mẹ';
-                document.getElementById('inheritNoteText').textContent = `Quyền truy cập của tệp/thư mục này được kế thừa từ thư mục mẹ: "${parentName}". Bạn không thể chỉnh sửa phân quyền này trực tiếp.`;
-                
-                document.getElementById('inheritToggle').checked = true;
-                item.isInheriting = true;
-
                 scopeSelect.disabled = true;
                 publicRoleSelect.disabled = true;
-                saveBtn.style.display = 'none'; // Ẩn nút Lưu do chỉ đọc
+                publicRangeSelect.disabled = true;
+                saveBtn.style.display = 'none'; // Ẩn nút Lưu
+            } else {
+                if (!parentFolderId || parentFolderId === 'root') {
+                    // Thư mục gốc (root) hoặc thư mục/tệp trực tiếp ở cấp 1 (con của root) -> không thể kế thừa quyền
+                    inheritCard.style.display = 'none';
+                    const customPermsCard = document.getElementById('customPermsCard');
+                    if (customPermsCard) customPermsCard.style.display = 'none';
+                    inheritNoteContainer.style.display = 'none';
+                    document.getElementById('inheritToggle').checked = false;
+                    item.isInheriting = false;
+
+                    scopeSelect.disabled = false;
+                    publicRoleSelect.disabled = false;
+                    publicRangeSelect.disabled = false;
+                    saveBtn.style.display = 'inline-block'; // Hiện nút Lưu
+                } else {
+                    // Thư mục con cấp 2 trở đi -> luôn kế thừa quyền từ mẹ
+                    inheritCard.style.display = 'none'; // Ẩn switch button
+                    
+                    const customPermsCard = document.getElementById('customPermsCard');
+                    if (customPermsCard) customPermsCard.style.display = 'flex'; // Hiện switch sử dụng quyền riêng
+                    
+                    inheritNoteContainer.style.display = 'block';
+                    
+                    const parentFolder = directories[parentFolderId];
+                    const parentName = parentFolder ? parentFolder.name : 'Thư mục mẹ';
+                    document.getElementById('inheritNoteText').textContent = `Quyền truy cập của tệp/thư mục này được kế thừa từ thư mục mẹ: "${parentName}". Bạn chỉ có thể thêm quyền, không thể giảm quyền.`;
+                    
+                    document.getElementById('inheritToggle').checked = true;
+                    item.isInheriting = true;
+
+                    // Thiết lập trạng thái switch quyền riêng (default là false/tắt)
+                    const customPermsToggle = document.getElementById('customPermsToggle');
+                    if (customPermsToggle) {
+                        customPermsToggle.checked = !!item.useCustomPermissions;
+                    }
+
+                    saveBtn.style.display = 'inline-block'; // Hiện nút Lưu
+                }
             }
 
             popupScope = item.permissionScope || 'RESTRICTED';
             popupPublicRole = item.publicRole || 'VIEW';
+            popupPublicRange = item.publicRange || 'ORG';
+            popupPublicBranches = JSON.parse(JSON.stringify(item.publicBranches || []));
+            if (popupPublicRange === 'BRANCH' && popupPublicBranches.length === 0) {
+                const author = item.author || 'Nguyễn Minh Đức';
+                const branchInfo = getAuthorBranch(author);
+                popupPublicBranches = [branchInfo.id];
+            }
+            popupCreatorPermission = item.creatorPermission || 'EDIT';
 
             scopeSelect.value = popupScope;
             publicRoleSelect.value = popupPublicRole;
+            publicRangeSelect.value = popupPublicRange;
 
             // Tải danh sách quyền tùy chỉnh
             currentPermissions = JSON.parse(JSON.stringify(item.permissions || []));
@@ -3486,7 +3899,11 @@
             selectedSubjectsForAdding = [];
             renderSelectedTags();
 
-            toggleInheritance();
+            if (parentFolderId && parentFolderId !== 'root') {
+                toggleCustomPermissions();
+            } else {
+                toggleInheritance();
+            }
 
             document.getElementById('shareModalOverlay').classList.add('open');
             lucide.createIcons();
@@ -3510,21 +3927,42 @@
             const publicRoleContainer = document.getElementById('publicRoleContainer');
             
             if (isInheriting) {
-                // Ẩn tất cả cấu hình tùy chỉnh
-                scopeContainer.style.display = 'none';
-                addMemberSection.style.display = 'none';
-                publicRoleContainer.style.display = 'none';
+                // Hiện chọn phạm vi vì có thể nâng cấp phạm vi (ví dụ PRIVATE -> RESTRICTED)
+                scopeContainer.style.display = 'block';
                 
-                // Lấy quyền hiệu lực từ thư mục mẹ
+                // Lấy quyền hiệu lực từ bản thân (đã bao gồm kế thừa và override từ mẹ)
                 const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
                 if (parentFolderId) {
-                    const parentEff = getEffectivePermissions(parentFolderId, 'folder');
-                    popupScope = parentEff.permissionScope;
-                    popupPublicRole = parentEff.publicRole;
-                    // Đánh dấu là kế thừa
-                    currentPermissions = parentEff.permissions.map(p => ({ ...p, isInherited: true }));
+                    const selfEff = getEffectivePermissions(activeTargetId, activeTargetType);
+                    popupScope = selfEff.permissionScope;
+                    popupPublicRole = selfEff.publicRole;
+                    popupPublicRange = selfEff.publicRange;
+                    popupPublicBranches = JSON.parse(JSON.stringify(selfEff.publicBranches || []));
+                    popupCreatorPermission = selfEff.creatorPermission;
+                    currentPermissions = JSON.parse(JSON.stringify(selfEff.permissions));
                 } else {
                     currentPermissions = [];
+                    popupPublicBranches = [];
+                }
+
+                // Đồng bộ các select element
+                const scopeSelect = document.getElementById('scopeSelect');
+                const publicRoleSelect = document.getElementById('publicRoleSelect');
+                const publicRangeSelect = document.getElementById('publicRangeSelect');
+                if (scopeSelect) scopeSelect.value = popupScope;
+                if (publicRoleSelect) publicRoleSelect.value = popupPublicRole;
+                if (publicRangeSelect) publicRangeSelect.value = popupPublicRange;
+
+                // Hiện thị các khu vực cấu hình tùy thuộc vào scope hiệu lực hiện tại
+                if (popupScope === 'PRIVATE') {
+                    addMemberSection.style.display = 'none';
+                    publicRoleContainer.style.display = 'none';
+                } else if (popupScope === 'RESTRICTED') {
+                    addMemberSection.style.display = 'block';
+                    publicRoleContainer.style.display = 'none';
+                } else if (popupScope === 'PUBLIC') {
+                    addMemberSection.style.display = 'block';
+                    publicRoleContainer.style.display = 'block';
                 }
             } else {
                 // Hiện chọn phạm vi
@@ -3535,7 +3973,99 @@
                 changeScope(popupScope);
             }
             
+            updateInheritedSelectsState();
+            renderPublicBranchSelector();
             renderPermissions();
+        }
+
+        // Bật/tắt Sử dụng quyền riêng cho thư mục/tệp con
+        function toggleCustomPermissions() {
+            const useCustom = document.getElementById('customPermsToggle').checked;
+            
+            const scopeSelect = document.getElementById('scopeSelect');
+            const publicRoleSelect = document.getElementById('publicRoleSelect');
+            const publicRangeSelect = document.getElementById('publicRangeSelect');
+            
+            const memberSearchInput = document.getElementById('memberSearchInput');
+            const searchTypeSelect = document.getElementById('searchTypeSelect');
+            const newPermissionSelect = document.getElementById('newPermissionSelect');
+            
+            if (useCustom) {
+                const selfEff = getEffectivePermissions(activeTargetId, activeTargetType);
+                popupScope = selfEff.permissionScope;
+                popupPublicRole = selfEff.publicRole;
+                popupPublicRange = selfEff.publicRange;
+                popupPublicBranches = JSON.parse(JSON.stringify(selfEff.publicBranches || []));
+                popupCreatorPermission = selfEff.creatorPermission;
+                currentPermissions = JSON.parse(JSON.stringify(selfEff.permissions));
+                
+                scopeSelect.value = popupScope;
+                publicRoleSelect.value = popupPublicRole;
+                publicRangeSelect.value = popupPublicRange;
+                
+                if (memberSearchInput) memberSearchInput.disabled = false;
+                if (searchTypeSelect) searchTypeSelect.disabled = false;
+                if (newPermissionSelect) newPermissionSelect.disabled = false;
+                
+                updateInheritedSelectsState();
+            } else {
+                const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : {
+                    permissionScope: 'RESTRICTED',
+                    publicRole: 'VIEW',
+                    publicRange: 'ORG',
+                    publicBranches: [],
+                    creatorPermission: 'EDIT',
+                    permissions: []
+                };
+                
+                popupScope = parentEff.permissionScope;
+                popupPublicRole = parentEff.publicRole;
+                popupPublicRange = parentEff.publicRange;
+                popupPublicBranches = JSON.parse(JSON.stringify(parentEff.publicBranches || []));
+                popupCreatorPermission = parentEff.creatorPermission;
+                currentPermissions = JSON.parse(JSON.stringify(parentEff.permissions));
+                
+                scopeSelect.value = popupScope;
+                publicRoleSelect.value = popupPublicRole;
+                publicRangeSelect.value = popupPublicRange;
+                
+                scopeSelect.disabled = true;
+                publicRoleSelect.disabled = true;
+                publicRangeSelect.disabled = true;
+                
+                if (memberSearchInput) memberSearchInput.disabled = true;
+                if (searchTypeSelect) searchTypeSelect.disabled = true;
+                if (newPermissionSelect) newPermissionSelect.disabled = true;
+            }
+            
+            // Show/hide containers based on scope
+            const scopeContainer = document.getElementById('scopeContainer');
+            const publicRoleContainer = document.getElementById('publicRoleContainer');
+            if (scopeContainer) scopeContainer.style.display = 'block';
+            if (publicRoleContainer) {
+                publicRoleContainer.style.display = (popupScope === 'PUBLIC') ? 'block' : 'none';
+            }
+            
+            renderPublicBranchSelector();
+            renderPermissions();
+        }
+
+        function ensureCreatorInRestrictedPermissions(author) {
+            const authorDetails = getAuthorDetails(author);
+            const creatorName = authorDetails.name;
+            const hasCreator = currentPermissions.some(p => p.name.includes(creatorName) || creatorName.includes(p.name));
+            if (!hasCreator) {
+                currentPermissions.unshift({
+                    id: 'u-creator',
+                    name: creatorName,
+                    type: 'USER',
+                    permission: 'EDIT',
+                    isInherited: false,
+                    sub: authorDetails.sub,
+                    avatarCode: authorDetails.avatarCode
+                });
+            }
         }
 
         // Thay đổi chế độ Phạm vi truy cập (Riêng tư, Giới hạn, Công khai)
@@ -3545,25 +4075,45 @@
             const addMemberSection = document.getElementById('addMemberSection');
             const publicRoleContainer = document.getElementById('publicRoleContainer');
             
+            const isInheriting = document.getElementById('inheritToggle').checked;
+
             if (scopeValue === 'PRIVATE') {
-                // Riêng tư -> Ẩn thêm thành viên, ẩn công khai
+                // Riêng tư -> Ẩn thêm thành viên, ẩn công khai, xóa sạch danh sách quyền
                 addMemberSection.style.display = 'none';
                 publicRoleContainer.style.display = 'none';
+                // Xóa sạch quyền vì PRIVATE = chỉ mình tôi + admin
+                currentPermissions = [];
             } else if (scopeValue === 'RESTRICTED') {
                 // Giới hạn -> Hiện thêm thành viên, ẩn công khai
                 addMemberSection.style.display = 'block';
                 publicRoleContainer.style.display = 'none';
                 
-                // Loại bỏ cờ kế thừa đối với các quyền tùy chỉnh
-                currentPermissions = currentPermissions.filter(p => !p.isInherited);
-                currentPermissions.forEach(p => p.isInherited = false);
+                // Loại bỏ cờ kế thừa đối với các quyền tùy chỉnh nếu không kế thừa
+                if (!isInheriting) {
+                    currentPermissions = currentPermissions.filter(p => !p.isInherited);
+                    currentPermissions.forEach(p => p.isInherited = false);
+                }
+
+                // Default creator into restricted permissions
+                const item = getItem(activeTargetId, activeTargetType);
+                const author = item ? item.author : 'Nguyễn Minh Đức';
+                ensureCreatorInRestrictedPermissions(author);
             } else if (scopeValue === 'PUBLIC') {
-                // Công khai -> Ẩn thêm thành viên, hiện cấu hình quyền hạn công khai
-                addMemberSection.style.display = 'none';
+                // Công khai -> Hiện cả 2: thêm thành viên và cấu hình quyền hạn công khai
+                addMemberSection.style.display = 'block';
                 publicRoleContainer.style.display = 'block';
                 popupPublicRole = document.getElementById('publicRoleSelect').value;
+                popupPublicRange = document.getElementById('publicRangeSelect').value;
+
+                // Loại bỏ cờ kế thừa đối với các quyền tùy chỉnh nếu không kế thừa
+                if (!isInheriting) {
+                    currentPermissions = currentPermissions.filter(p => !p.isInherited);
+                    currentPermissions.forEach(p => p.isInherited = false);
+                }
             }
             
+            updateInheritedSelectsState();
+            renderPublicBranchSelector();
             renderPermissions();
         }
 
@@ -3573,40 +4123,289 @@
             renderPermissions();
         }
 
+        // Thay đổi phạm vi công khai
+        function changePublicRange(rangeValue) {
+            popupPublicRange = rangeValue;
+            if (rangeValue === 'BRANCH' && popupPublicBranches.length === 0) {
+                const item = getItem(activeTargetId, activeTargetType);
+                const author = item ? item.author : 'Nguyễn Minh Đức';
+                const branchInfo = getAuthorBranch(author);
+                popupPublicBranches = [branchInfo.id];
+            }
+            updateInheritedSelectsState();
+            renderPublicBranchSelector();
+            renderPermissions();
+        }
+
+        // Cập nhật trạng thái khóa/mở khóa của các select element dựa trên kế thừa
+        function updateInheritedSelectsState() {
+            const isInheriting = document.getElementById('inheritToggle').checked;
+            const scopeSelect = document.getElementById('scopeSelect');
+            const publicRoleSelect = document.getElementById('publicRoleSelect');
+            const publicRangeSelect = document.getElementById('publicRangeSelect');
+
+            if (!scopeSelect || !publicRoleSelect || !publicRangeSelect) return;
+
+            // Reset tất cả các tùy chọn về trạng thái kích hoạt bình thường
+            for (let i = 0; i < scopeSelect.options.length; i++) scopeSelect.options[i].disabled = false;
+            for (let i = 0; i < publicRoleSelect.options.length; i++) publicRoleSelect.options[i].disabled = false;
+            for (let i = 0; i < publicRangeSelect.options.length; i++) publicRangeSelect.options[i].disabled = false;
+
+            scopeSelect.disabled = false;
+            publicRoleSelect.disabled = false;
+            publicRangeSelect.disabled = false;
+
+            const customPermsToggle = document.getElementById('customPermsToggle');
+            const useCustom = customPermsToggle ? customPermsToggle.checked : true;
+
+            if (isInheriting && !useCustom) {
+                scopeSelect.disabled = true;
+                publicRoleSelect.disabled = true;
+                publicRangeSelect.disabled = true;
+                return;
+            }
+
+            if (isInheriting) {
+                const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : null;
+
+                if (parentEff) {
+                    // 1. Khóa các tùy chọn phạm vi truy cập dựa trên mẹ (chỉ cho phép nâng hoặc giữ nguyên)
+                    if (parentEff.permissionScope === 'PUBLIC') {
+                        scopeSelect.options[0].disabled = true; // Riêng tư
+                        scopeSelect.options[1].disabled = true; // Giới hạn
+                        scopeSelect.disabled = true; // Con bắt buộc phải là PUBLIC
+                    } else if (parentEff.permissionScope === 'RESTRICTED') {
+                        scopeSelect.options[0].disabled = true; // Riêng tư (không cho hạ xuống PRIVATE)
+                    }
+
+                    // 2. Khóa cứng Quyền mặc định ở con thành Chỉnh sửa nếu mẹ là Công khai - Chỉnh sửa (chặn hạ quyền mặc định)
+                    if (parentEff.permissionScope === 'PUBLIC' && parentEff.publicRole === 'EDIT') {
+                        publicRoleSelect.value = 'EDIT'; // Ép giá trị về Chỉnh sửa
+                        popupPublicRole = 'EDIT'; // Cập nhật biến trạng thái
+                        publicRoleSelect.options[0].disabled = true; // Chỉ xem
+                        publicRoleSelect.disabled = true; // Khóa cứng Chỉnh sửa
+                    }
+                }
+            }
+        }
+
+
         // Render danh sách gán quyền trong Modal
         function renderPermissions() {
             const container = document.getElementById('membersListContainer');
             container.innerHTML = '';
 
             const isInheriting = document.getElementById('inheritToggle').checked;
+            const item = getItem(activeTargetId, activeTargetType);
+
+            const customPermsToggle = document.getElementById('customPermsToggle');
+            const useCustom = customPermsToggle ? customPermsToggle.checked : true;
+
+            // Dynamically manage visibility and disabled state of #addMemberSection
+            const hasEdit = checkCurrentUserHasEditPermission(activeTargetId, activeTargetType);
+            const shouldDisableSearch = !hasEdit || (isInheriting && !useCustom);
+
+            const memberSearchInput = document.getElementById('memberSearchInput');
+            const searchTypeSelect = document.getElementById('searchTypeSelect');
+            const newPermissionSelect = document.getElementById('newPermissionSelect');
+
+            if (memberSearchInput) memberSearchInput.disabled = shouldDisableSearch;
+            if (searchTypeSelect) searchTypeSelect.disabled = shouldDisableSearch;
+            if (newPermissionSelect) newPermissionSelect.disabled = shouldDisableSearch;
+
+            const addMemberSection = document.getElementById('addMemberSection');
+            if (addMemberSection) {
+                if ((isInheriting && !useCustom) || popupScope === 'PRIVATE') {
+                    addMemberSection.style.display = 'none';
+                } else if (popupScope === 'PUBLIC' && popupPublicRange === 'ORG' && popupPublicRole === 'EDIT') {
+                    addMemberSection.style.display = 'none';
+                } else {
+                    addMemberSection.style.display = 'block';
+                }
+            }
 
             if (isInheriting) {
-                // TRƯỜNG HỢP 1: ĐANG KẾ THỪA (Chỉ đọc hoàn toàn)
-                if (popupScope === 'PRIVATE') {
-                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', false));
-                    container.appendChild(createReadOnlyRow('Admin tổng', 'Toàn quyền', 'AD', 'Cấp cao nhất', true));
-                } 
-                else if (popupScope === 'PUBLIC') {
-                    const publicLabel = popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa';
-                    container.appendChild(createReadOnlyRow('Tất cả nhân sự công ty', publicLabel, 'ALL', 'Toàn bộ tài khoản có thể truy cập', true));
-                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', false));
-                }
-                else if (popupScope === 'RESTRICTED') {
-                    if (currentPermissions.length === 0) {
-                        container.innerHTML = `
-                            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-                                Thư mục mẹ không cấu hình chia sẻ giới hạn cho thành viên nào.
-                            </div>
-                        `;
-                        return;
+                const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : null;
+
+                const author = item ? item.author : 'Nguyễn Minh Đức';
+                const authorDetails = getAuthorDetails(author);
+                const ownerName = authorDetails.name.includes('Đức') ? 'Nguyễn Minh Đức (tôi)' : authorDetails.name;
+
+                if (!useCustom) {
+                    // TRƯỜNG HỢP 1A: KẾ THỪA QUYỀN CHA HOÀN TOÀN (Không có quyền riêng)
+                    // 1. Owner Row
+                    const creatorPermLabel = (popupCreatorPermission === 'VIEW') ? 'Chỉ xem' : 'Chỉnh sửa';
+                    container.appendChild(createReadOnlyRow(ownerName, creatorPermLabel, authorDetails.avatarCode, 'Nhân viên sale', 'USER'));
+
+                    // 2. Global Admin Row
+                    container.appendChild(createReadOnlyRow(globalAdminDetails.name, 'Chỉnh sửa', globalAdminDetails.avatarCode, globalAdminDetails.role, 'USER'));
+
+                    // 3. Public Range Row (if scope is PUBLIC)
+                    if (popupScope === 'PUBLIC') {
+                        if (popupPublicRange === 'BRANCH') {
+                            const branchesToRender = popupPublicBranches.length > 0 ? popupPublicBranches : [getAuthorBranch(author).id];
+                            branchesToRender.forEach(brId => {
+                                const brSubject = availableSubjects.find(sub => sub.id === brId);
+                                if (brSubject) {
+                                    container.appendChild(createReadOnlyRow(`Tất cả nhân sự ${brSubject.name}`, popupPublicRole, brSubject.avatarCode, `Tất cả nhân sự thuộc ${brSubject.name}`, 'BRANCH'));
+                                }
+                            });
+                        } else {
+                            container.appendChild(createReadOnlyRow('Tất cả nhân sự trong đơn vị', popupPublicRole, 'ALL', 'Toàn bộ tài khoản có thể truy cập', 'GROUP'));
+                        }
                     }
-                    currentPermissions.forEach((perm) => {
+
+                    // 4. Custom members
+                    if (popupScope !== 'PRIVATE') {
+                        currentPermissions.forEach((perm) => {
+                            if (perm.name.includes('Đức') || perm.name.includes('Quản trị') || perm.name.includes('Bình')) return;
+                            const row = document.createElement('div');
+                            row.className = 'member-row';
+                            const avatarClass = getMemberAvatarClass(perm.type);
+                            const typeLabel = getBadgeLabel(perm.type);
+                            const typeBadgeClass = 'type-badge ' + getBadgeClass(perm.type);
+                            
+                            row.innerHTML = `
+                                <div class="member-info">
+                                    <div class="${avatarClass}">${perm.avatarCode}</div>
+                                    <div class="member-details">
+                                        <div class="member-name">
+                                            ${perm.name}
+                                            <span class="${typeBadgeClass}">${typeLabel}</span>
+                                            <span class="type-badge group" style="background: #f1f5f9; color: var(--text-muted); margin-left: 4px;">Kế thừa</span>
+                                        </div>
+                                        <div class="member-email">${getUserRole(perm.name)}</div>
+                                    </div>
+                                </div>
+                                <div class="member-actions" title="Bạn không thể thay đổi quyền này ở đây">
+                                    <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                        <option value="VIEW" ${perm.permission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                        <option value="EDIT" ${perm.permission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                    </select>
+                                </div>
+                            `;
+                            container.appendChild(row);
+                        });
+                    }
+                } else {
+                    // TRƯỜNG HỢP 1B: KẾ THỪA CÓ NÂNG CẤP/QUYỀN RIÊNG (useCustom === true)
+                    // 1. Owner Row (with upgrade support)
+                    let isOwnerDisabled = false;
+                    let ownerDisabledAttr = '';
+                    let ownerTooltip = '';
+
+                    if (parentEff && parentEff.creatorPermission === 'EDIT') {
+                        isOwnerDisabled = true;
+                        ownerDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                        ownerTooltip = 'Quyền kế thừa từ mẹ là Chỉnh sửa, không thể giảm quyền';
+                    } else if (popupPublicRole === 'EDIT' && popupScope === 'PUBLIC') {
+                        popupCreatorPermission = 'EDIT';
+                        isOwnerDisabled = true;
+                        ownerDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                        ownerTooltip = 'Khi công khai quyền Chỉnh sửa, chủ sở hữu mặc định là Chỉnh sửa';
+                    } else {
+                        isOwnerDisabled = (popupCreatorPermission === 'VIEW');
+                        if (isOwnerDisabled) {
+                            ownerDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                            ownerTooltip = 'Bạn không thể đổi chính mình từ chỉ xem thành chỉnh sửa';
+                        }
+                    }
+
+                    const ownerRow = document.createElement('div');
+                    ownerRow.className = 'member-row';
+                    const ownerAvatarClass = getMemberAvatarClass('USER');
+                    ownerRow.innerHTML = `
+                        <div class="member-info">
+                            <div class="${ownerAvatarClass}">${authorDetails.avatarCode}</div>
+                            <div class="member-details">
+                                <div class="member-name">${ownerName}<span class="type-badge user">Chủ sở hữu</span></div>
+                                <div class="member-email">Nhân viên sale</div>
+                            </div>
+                        </div>
+                        <div class="member-actions" ${ownerTooltip ? `title="${ownerTooltip}"` : ''}>
+                            <select class="row-permission-select" ${ownerDisabledAttr}>
+                                <option value="VIEW" ${popupCreatorPermission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                <option value="EDIT" ${popupCreatorPermission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                            </select>
+                        </div>
+                    `;
+                    if (!isOwnerDisabled) {
+                        ownerRow.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                            const val = e.target.value;
+                            if (val === 'VIEW') {
+                                const proceed = confirm("Bạn sẽ mất quyền chỉnh sửa cho thư mục / tệp này sau khi lưu. Bạn có chắc chắn muốn thay đổi?");
+                                if (proceed) {
+                                    popupCreatorPermission = 'VIEW';
+                                    renderPermissions();
+                                } else {
+                                    ownerRow.querySelector('.row-permission-select').value = 'EDIT';
+                                    popupCreatorPermission = 'EDIT';
+                                }
+                            } else {
+                                popupCreatorPermission = 'EDIT';
+                            }
+                        });
+                    }
+                    container.appendChild(ownerRow);
+
+                    // 2. Global Admin Row (Always Read-only)
+                    container.appendChild(createReadOnlyRow(globalAdminDetails.name, 'Chỉnh sửa', globalAdminDetails.avatarCode, globalAdminDetails.role, 'USER'));
+
+                    if (popupScope === 'PUBLIC') {
+                        // 3. Public Range Row
+                        if (popupPublicRange === 'BRANCH') {
+                            const branchInfo = getAuthorBranch(author);
+                            const branchesToRender = popupPublicBranches.length > 0 ? popupPublicBranches : [branchInfo.id];
+                            branchesToRender.forEach(brId => {
+                                const brSubject = availableSubjects.find(sub => sub.id === brId);
+                                if (brSubject) {
+                                    container.appendChild(createReadOnlyRow(`Tất cả nhân sự ${brSubject.name}`, popupPublicRole, brSubject.avatarCode, `Tất cả nhân sự thuộc ${brSubject.name}`, 'BRANCH'));
+                                }
+                            });
+                        } else {
+                            container.appendChild(createReadOnlyRow('Tất cả nhân sự trong đơn vị', popupPublicRole, 'ALL', 'Toàn bộ tài khoản có thể truy cập', 'GROUP'));
+                        }
+                    }
+
+                    // 4. Custom and Inherited Member Rows
+                if (popupScope !== 'PRIVATE') {
+                    currentPermissions.forEach((perm, index) => {
+                        if (perm.name.includes('Đức') || perm.name.includes('Quản trị') || perm.name.includes('Bình')) return;
+
                         const row = document.createElement('div');
                         row.className = 'member-row';
                         const avatarClass = getMemberAvatarClass(perm.type);
                         const typeLabel = getBadgeLabel(perm.type);
                         const typeBadgeClass = 'type-badge ' + getBadgeClass(perm.type);
-                        
+
+                        let isRowDisabled = false;
+                        let rowDisabledAttr = '';
+                        let rowTooltip = '';
+
+                        if (perm.isInherited) {
+                            const parentPerm = parentEff ? parentEff.permissions.find(p => p.id === perm.id) : null;
+                            const parentLevel = parentPerm ? parentPerm.permission : 'VIEW';
+                            if (parentLevel === 'EDIT') {
+                                isRowDisabled = true;
+                                rowDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                                rowTooltip = 'Quyền kế thừa từ mẹ là Chỉnh sửa, không thể giảm quyền';
+                            }
+                        }
+
+                        const inheritedBadge = perm.isInherited 
+                            ? `<span class="type-badge group" style="background: #f1f5f9; color: var(--text-muted); margin-left: 4px;">Kế thừa</span>` 
+                            : '';
+
+                        const deleteBtnHtml = perm.isInherited 
+                            ? '' 
+                            : `
+                            <button class="btn-delete-permission">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            `;
+
                         row.innerHTML = `
                             <div class="member-info">
                                 <div class="${avatarClass}">${perm.avatarCode}</div>
@@ -3614,37 +4413,140 @@
                                     <div class="member-name">
                                         ${perm.name}
                                         <span class="${typeBadgeClass}">${typeLabel}</span>
-                                        <span class="type-badge group" style="background: #f1f5f9; color: var(--text-muted); margin-left: 4px;">Kế thừa</span>
+                                        ${inheritedBadge}
                                     </div>
-                                    <div class="member-email">${perm.sub}</div>
+                                    <div class="member-email">${getUserRole(perm.name)}</div>
                                 </div>
                             </div>
-                            <div class="member-actions">
-                                <span class="row-permission-badge">${getPermissionLabel(perm.permission)}</span>
+                            <div class="member-actions" ${rowTooltip ? `title="${rowTooltip}"` : ''}>
+                                <select class="row-permission-select" ${rowDisabledAttr}>
+                                    <option value="VIEW" ${perm.permission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                    <option value="EDIT" ${perm.permission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                </select>
+                                ${deleteBtnHtml}
                             </div>
                         `;
+
+                        row.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                            updatePermissionLevel(index, e.target.value);
+                        });
+
+                        const deleteBtn = row.querySelector('.btn-delete-permission');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', () => {
+                                deletePermission(index);
+                            });
+                        }
+
                         container.appendChild(row);
                     });
                 }
-            } else {
+            }
+        } else {
                 // TRƯỜNG HỢP 2: TẮT KẾ THỪA
                 if (popupScope === 'PRIVATE') {
-                    // 2a. RIÊNG TƯ (Chỉ mình tôi và admin tổng)
-                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', 'USER'));
-                    container.appendChild(createReadOnlyRow('Admin tổng', 'Toàn quyền', 'AD', 'Cấp cao nhất', 'ROLE'));
+                    // 2a. RIÊNG TƯ (Chỉ mình tôi, admin tổng)
+                    const author = item ? item.author : 'Nguyễn Minh Đức';
+                    const authorDetails = getAuthorDetails(author);
+
+                    // Row 1: Creator (Owner) - changeable permission dropdown, no delete button
+                    const ownerName = authorDetails.name.includes('Đức') ? 'Nguyễn Minh Đức (tôi)' : authorDetails.name;
+                    const creatorRow = document.createElement('div');
+                    creatorRow.className = 'member-row';
+                    const creatorAvatarClass = getMemberAvatarClass('USER');
+                    
+                    const isCreatorDisabled = (popupCreatorPermission === 'VIEW');
+                    const creatorDisabledAttr = isCreatorDisabled ? 'disabled style="cursor: not-allowed; opacity: 0.7;" title="Bạn không thể đổi chính mình từ chỉ xem thành chỉnh sửa"' : '';
+
+                    creatorRow.innerHTML = `
+                        <div class="member-info">
+                            <div class="${creatorAvatarClass}">${authorDetails.avatarCode}</div>
+                            <div class="member-details">
+                                <div class="member-name">${ownerName}<span class="type-badge user">Chủ sở hữu</span></div>
+                                <div class="member-email">Nhân viên sale</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <select class="row-permission-select" ${creatorDisabledAttr}>
+                                <option value="VIEW" ${popupCreatorPermission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                <option value="EDIT" ${popupCreatorPermission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                            </select>
+                        </div>
+                    `;
+                    creatorRow.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                        popupCreatorPermission = e.target.value;
+                    });
+                    container.appendChild(creatorRow);
+
+                    // Row 2: Admin tổng - disabled permission select with tooltip title
+                    const globalAdminRow = document.createElement('div');
+                    globalAdminRow.className = 'member-row';
+                    const globalAdminAvatarClass = getMemberAvatarClass('USER');
+                    globalAdminRow.innerHTML = `
+                        <div class="member-info">
+                            <div class="${globalAdminAvatarClass}">${globalAdminDetails.avatarCode}</div>
+                            <div class="member-details">
+                                <div class="member-name">${globalAdminDetails.name}<span class="type-badge user">User</span></div>
+                                <div class="member-email">${globalAdminDetails.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions" title="Bạn không thể thay đổi quyền của user này">
+                            <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                <option value="EDIT" selected>Chỉnh sửa</option>
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(globalAdminRow);
                 } 
                 else if (popupScope === 'RESTRICTED') {
                     // 2b. GIỚI HẠN (Cho phép thêm/sửa/xóa quyền thành viên)
-                    if (currentPermissions.length === 0) {
-                        container.innerHTML = `
-                            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-                                Chưa có thành viên nào được gán quyền. Hãy tìm kiếm và thêm thành viên phía trên.
+                    
+                    // Render Owner first if they exist at index 0
+                    const ownerIndex = currentPermissions.findIndex(p => p.name.includes('Đức') || p.name.includes('Quản trị'));
+                    let ownerPerm = null;
+                    if (ownerIndex > -1) {
+                        ownerPerm = currentPermissions[ownerIndex];
+                    }
+
+                    if (ownerPerm) {
+                        const row = document.createElement('div');
+                        row.className = 'member-row';
+                        const avatarClass = getMemberAvatarClass(ownerPerm.type);
+                        const typeText = getBadgeLabel(ownerPerm.type);
+                        const typeBadgeClass = 'type-badge ' + getBadgeClass(ownerPerm.type);
+                        row.innerHTML = `
+                            <div class="member-info">
+                                <div class="${avatarClass}">${ownerPerm.avatarCode}</div>
+                                <div class="member-details">
+                                    <div class="member-name">${ownerPerm.name}<span class="type-badge user">Chủ sở hữu</span></div>
+                                    <div class="member-email">${getUserRole(ownerPerm.name)}</div>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <select class="row-permission-select">
+                                    <option value="VIEW" ${ownerPerm.permission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                    <option value="EDIT" ${ownerPerm.permission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                </select>
+                                <button class="btn-delete-permission">
+                                    <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                                </button>
                             </div>
                         `;
-                        return;
+                        row.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                            updatePermissionLevel(ownerIndex, e.target.value);
+                        });
+                        row.querySelector('.btn-delete-permission').addEventListener('click', () => {
+                            deletePermission(ownerIndex);
+                        });
+                        container.appendChild(row);
                     }
-                    
+
+                    // Default Global Admin below Owner
+                    container.appendChild(createReadOnlyRow(globalAdminDetails.name, 'Chỉnh sửa', globalAdminDetails.avatarCode, globalAdminDetails.role, 'USER'));
+
+                    // Render all other permissions
                     currentPermissions.forEach((perm, index) => {
+                        if (index === ownerIndex) return; // Skip owner
                         const row = document.createElement('div');
                         row.className = 'member-row';
                         const avatarClass = getMemberAvatarClass(perm.type);
@@ -3656,7 +4558,7 @@
                                 <div class="${avatarClass}">${perm.avatarCode}</div>
                                 <div class="member-details">
                                     <div class="member-name">${perm.name}<span class="${typeBadgeClass}">${typeText}</span></div>
-                                    <div class="member-email">${perm.sub}</div>
+                                    <div class="member-email">${getUserRole(perm.name)}</div>
                                 </div>
                             </div>
                             <div class="member-actions">
@@ -3682,10 +4584,179 @@
                     });
                 } 
                 else if (popupScope === 'PUBLIC') {
-                    // 2c. CÔNG KHAI (Hiển thị Tất cả nhân sự và Tôi)
-                    const publicLabel = popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa';
-                    container.appendChild(createReadOnlyRow('Tất cả nhân sự công ty', publicLabel, 'ALL', 'Toàn bộ tài khoản có thể truy cập', 'ROLE'));
-                    container.appendChild(createReadOnlyRow('Nguyễn Minh Đức (Tôi)', 'Chủ sở hữu', 'MĐ', 'duc.nm@company.com', 'USER'));
+                    // 2c. CÔNG KHAI
+                    const author = item ? item.author : 'Nguyễn Minh Đức';
+                    const authorDetails = getAuthorDetails(author);
+                    const ownerName = authorDetails.name.includes('Đức') ? 'Nguyễn Minh Đức (tôi)' : authorDetails.name;
+                    const branchInfo = getAuthorBranch(author);
+
+                    // --- ROW 1: OWNER (Nguyễn Minh Đức (tôi)) ---
+                    const ownerRow = document.createElement('div');
+                    ownerRow.className = 'member-row';
+                    const ownerAvatarClass = getMemberAvatarClass('USER');
+
+                    let isOwnerDisabled = false;
+                    let ownerDisabledAttr = '';
+                    let ownerTooltip = '';
+
+                    if (popupPublicRole === 'EDIT') {
+                        popupCreatorPermission = 'EDIT';
+                        isOwnerDisabled = true;
+                        ownerDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                        ownerTooltip = 'Bạn không thể thay đổi quyền của user này';
+                    } else {
+                        // VIEW mode
+                        isOwnerDisabled = (popupCreatorPermission === 'VIEW');
+                        if (isOwnerDisabled) {
+                            ownerDisabledAttr = 'disabled style="cursor: not-allowed; opacity: 0.7;"';
+                            ownerTooltip = 'Bạn không thể đổi chính mình từ chỉ xem thành chỉnh sửa';
+                        }
+                    }
+
+                    ownerRow.innerHTML = `
+                        <div class="member-info">
+                            <div class="${ownerAvatarClass}">${authorDetails.avatarCode}</div>
+                            <div class="member-details">
+                                <div class="member-name">${ownerName}<span class="type-badge user">Chủ sở hữu</span></div>
+                                <div class="member-email">Nhân viên sale</div>
+                            </div>
+                        </div>
+                        <div class="member-actions" ${ownerTooltip ? `title="${ownerTooltip}"` : ''}>
+                            <select class="row-permission-select" ${ownerDisabledAttr}>
+                                <option value="VIEW" ${popupCreatorPermission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                <option value="EDIT" ${popupCreatorPermission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                            </select>
+                        </div>
+                    `;
+
+                    const selectEl = ownerRow.querySelector('.row-permission-select');
+                    if (!isOwnerDisabled) {
+                        selectEl.addEventListener('change', (e) => {
+                            const val = e.target.value;
+                            if (val === 'VIEW') {
+                                const proceed = confirm("Bạn sẽ mất quyền chỉnh sửa cho thư mục / tệp này sau khi lưu. Bạn có chắc chắn muốn thay đổi?");
+                                if (proceed) {
+                                    popupCreatorPermission = 'VIEW';
+                                    renderPermissions();
+                                } else {
+                                    selectEl.value = 'EDIT';
+                                    popupCreatorPermission = 'EDIT';
+                                }
+                            } else {
+                                popupCreatorPermission = 'EDIT';
+                            }
+                        });
+                    }
+                    container.appendChild(ownerRow);
+
+                    // --- ROW 2: GLOBAL ADMIN (Trần Thị Bình (admin tổng)) ---
+                    const globalAdminRow = document.createElement('div');
+                    globalAdminRow.className = 'member-row';
+                    const globalAdminAvatarClass = getMemberAvatarClass('USER');
+                    globalAdminRow.innerHTML = `
+                        <div class="member-info">
+                            <div class="${globalAdminAvatarClass}">${globalAdminDetails.avatarCode}</div>
+                            <div class="member-details">
+                                <div class="member-name">${globalAdminDetails.name}<span class="type-badge user">User</span></div>
+                                <div class="member-email">${globalAdminDetails.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions" title="Bạn không thể thay đổi quyền của user này">
+                            <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                <option value="EDIT" selected>Chỉnh sửa</option>
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(globalAdminRow);
+
+                    // --- ROW 3: PUBLIC RANGE (Tất cả nhân sự trong đơn vị / Chi nhánh) ---
+                    if (popupPublicRange === 'BRANCH') {
+                        const branchesToRender = popupPublicBranches.length > 0 ? popupPublicBranches : [branchInfo.id];
+                        branchesToRender.forEach(brId => {
+                            const brSubject = availableSubjects.find(sub => sub.id === brId);
+                            if (brSubject) {
+                                const branchRow = document.createElement('div');
+                                branchRow.className = 'member-row';
+                                const avatarClass = getMemberAvatarClass('BRANCH');
+                                branchRow.innerHTML = `
+                                    <div class="member-info">
+                                        <div class="${avatarClass}">${brSubject.avatarCode}</div>
+                                        <div class="member-details">
+                                            <div class="member-name">Tất cả nhân sự ${brSubject.name}<span class="type-badge branch">Chi nhánh</span></div>
+                                            <div class="member-email">Tất cả nhân sự thuộc ${brSubject.name}</div>
+                                        </div>
+                                    </div>
+                                    <div class="member-actions" title="Bạn không thể thay đổi quyền này ở đây">
+                                        <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                            <option value="VIEW" ${popupPublicRole === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                            <option value="EDIT" ${popupPublicRole === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                        </select>
+                                    </div>
+                                `;
+                                container.appendChild(branchRow);
+                            }
+                        });
+                    } else {
+                        // ORG range
+                        const publicRow = document.createElement('div');
+                        publicRow.className = 'member-row';
+                        const avatarClass = getMemberAvatarClass('GROUP');
+                        publicRow.innerHTML = `
+                            <div class="member-info">
+                                <div class="${avatarClass}">ALL</div>
+                                <div class="member-details">
+                                    <div class="member-name">Tất cả nhân sự trong đơn vị<span class="type-badge group">Nhóm</span></div>
+                                    <div class="member-email">Toàn bộ tài khoản có thể truy cập</div>
+                                </div>
+                            </div>
+                            <div class="member-actions" title="Bạn không thể thay đổi quyền này ở đây">
+                                <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                                    <option value="VIEW" ${popupPublicRole === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                    <option value="EDIT" ${popupPublicRole === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                </select>
+                            </div>
+                        `;
+                        container.appendChild(publicRow);
+                    }
+
+                    // --- ROW 4+: CUSTOM OVERRIDE PERMISSIONS ---
+                    currentPermissions.forEach((perm, index) => {
+                        if (perm.name.includes('Đức') || perm.name.includes('Quản trị') || perm.name.includes('Bình')) return;
+                        const row = document.createElement('div');
+                        row.className = 'member-row';
+                        const avatarClass = getMemberAvatarClass(perm.type);
+                        const typeText = getBadgeLabel(perm.type);
+                        const typeBadgeClass = 'type-badge ' + getBadgeClass(perm.type);
+
+                        row.innerHTML = `
+                            <div class="member-info">
+                                <div class="${avatarClass}">${perm.avatarCode}</div>
+                                <div class="member-details">
+                                    <div class="member-name">${perm.name}<span class="${typeBadgeClass}">${typeText}</span></div>
+                                    <div class="member-email">${getUserRole(perm.name)}</div>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <select class="row-permission-select">
+                                    <option value="VIEW" ${perm.permission === 'VIEW' ? 'selected' : ''}>Chỉ xem</option>
+                                    <option value="EDIT" ${perm.permission === 'EDIT' ? 'selected' : ''}>Chỉnh sửa</option>
+                                </select>
+                                <button class="btn-delete-permission">
+                                    <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            </div>
+                        `;
+
+                        // Bind events dynamically
+                        row.querySelector('.row-permission-select').addEventListener('change', (e) => {
+                            updatePermissionLevel(index, e.target.value);
+                        });
+                        row.querySelector('.btn-delete-permission').addEventListener('click', () => {
+                            deletePermission(index);
+                        });
+
+                        container.appendChild(row);
+                    });
                 }
             }
 
@@ -3705,16 +4776,46 @@
             }
             const avatarClass = getMemberAvatarClass(type);
             
+            let displayedSubtext = subText;
+            if (name.includes('Đức') || name.includes('tôi') || name.includes('Tôi')) {
+                displayedSubtext = 'Nhân viên sale';
+            } else if (name.includes('An')) {
+                displayedSubtext = 'Admin Chi nhánh Hà Nội';
+            } else if (name.includes('Bình')) {
+                displayedSubtext = 'Admin tổng';
+            } else if (name.includes('Hoàng')) {
+                displayedSubtext = 'Admin Chi nhánh TP.HCM';
+            } else if (name.includes('Mai')) {
+                displayedSubtext = 'Admin Chi nhánh Đà Nẵng';
+            }
+            
+            // Render name with badge if appropriate
+            let badgeHtml = '';
+            if (name.includes('Đức') || name.includes('tôi') || name.includes('Tôi')) {
+                badgeHtml = '<span class="type-badge user">Chủ sở hữu</span>';
+            } else if (name.includes('Bình')) {
+                badgeHtml = '<span class="type-badge user">User</span>';
+            } else if (type === 'BRANCH') {
+                badgeHtml = `<span class="type-badge branch">Chi nhánh</span>`;
+            } else if (type === 'GROUP') {
+                badgeHtml = `<span class="type-badge group">Nhóm</span>`;
+            }
+
+            const isView = roleLabel.includes('xem') || roleLabel === 'VIEW';
+
             row.innerHTML = `
                 <div class="member-info">
                     <div class="${avatarClass}">${avatarCode}</div>
                     <div class="member-details">
-                        <div class="member-name">${name}</div>
-                        <div class="member-email">${subText}</div>
+                        <div class="member-name">${name}${badgeHtml}</div>
+                        <div class="member-email">${displayedSubtext}</div>
                     </div>
                 </div>
-                <div class="member-actions">
-                    <span class="row-permission-badge">${roleLabel}</span>
+                <div class="member-actions" title="Bạn không thể thay đổi quyền này ở đây">
+                    <select class="row-permission-select" disabled style="cursor: not-allowed; opacity: 0.7;">
+                        <option value="VIEW" ${isView ? 'selected' : ''}>Chỉ xem</option>
+                        <option value="EDIT" ${!isView ? 'selected' : ''}>Chỉnh sửa</option>
+                    </select>
                 </div>
             `;
             return row;
@@ -3784,6 +4885,124 @@
             filterDropdown();
         }
 
+        function renderPublicBranchSelector() {
+            const container = document.getElementById('publicBranchSelectionContainer');
+            if (!container) return;
+            if (popupScope !== 'PUBLIC' || popupPublicRange !== 'BRANCH') {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+
+            const isInheriting = document.getElementById('inheritToggle').checked;
+            const hasEdit = checkCurrentUserHasEditPermission(activeTargetId, activeTargetType);
+            
+            const customPermsToggle = document.getElementById('customPermsToggle');
+            const useCustom = customPermsToggle ? customPermsToggle.checked : true;
+            const isReadOnly = !hasEdit || (isInheriting && !useCustom);
+
+            // 1. Update select placeholder text with chosen branch names
+            const selectedBranchNames = [];
+            popupPublicBranches.forEach(brId => {
+                const branch = availableSubjects.find(sub => sub.id === brId);
+                if (branch) selectedBranchNames.push(branch.name);
+            });
+            const placeholderEl = document.getElementById('publicBranchSelectPlaceholder');
+            if (placeholderEl) {
+                if (selectedBranchNames.length > 0) {
+                    placeholderEl.textContent = selectedBranchNames.join(', ');
+                    placeholderEl.style.color = 'var(--text-main)';
+                } else {
+                    placeholderEl.textContent = 'Chọn chi nhánh...';
+                    placeholderEl.style.color = 'var(--text-muted)';
+                }
+            }
+
+            // 2. Manage disabled/enabled state of select button
+            const selectBtn = document.getElementById('btnSelectPublicBranches');
+            if (selectBtn) {
+                if (isReadOnly) {
+                    selectBtn.style.cursor = 'not-allowed';
+                    selectBtn.style.opacity = '0.7';
+                    selectBtn.style.background = '#f8fafc';
+                    selectBtn.setAttribute('onclick', ''); // disable click
+                    const dropdown = document.getElementById('publicBranchDropdown');
+                    if (dropdown) dropdown.classList.remove('show');
+                } else {
+                    selectBtn.style.cursor = 'pointer';
+                    selectBtn.style.opacity = '1';
+                    selectBtn.style.background = 'white';
+                    selectBtn.setAttribute('onclick', 'togglePublicBranchDropdown(event)');
+                }
+            }
+
+            // 3. Render items in dropdown list with checkboxes
+            const dropdown = document.getElementById('publicBranchDropdown');
+            if (dropdown) {
+                dropdown.innerHTML = '';
+                if (!isReadOnly) {
+                    const branches = availableSubjects.filter(sub => sub.type === 'BRANCH');
+                    branches.forEach(branch => {
+                        const isSelected = popupPublicBranches.includes(branch.id);
+                        
+                        // Check if this branch is inherited from parent
+                        const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                        const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : null;
+                        const isBranchInherited = parentEff && parentEff.permissionScope === 'PUBLIC' && parentEff.publicRange === 'BRANCH' && parentEff.publicBranches && parentEff.publicBranches.includes(branch.id);
+
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.style.display = 'flex';
+                        item.style.alignItems = 'center';
+                        item.style.justifyContent = 'space-between';
+                        item.style.padding = '10px 14px';
+                        
+                        if (isBranchInherited) {
+                            item.style.cursor = 'not-allowed';
+                            item.style.opacity = '0.6';
+                            item.title = 'Chi nhánh này được kế thừa từ mẹ, không thể loại bỏ';
+                            item.onclick = (e) => {
+                                e.stopPropagation(); // Keep dropdown open, do nothing
+                            };
+                        } else {
+                            item.style.cursor = 'pointer';
+                            item.onclick = (e) => {
+                                e.stopPropagation(); // Keep dropdown open to select multiple
+                                if (isSelected) {
+                                    if (popupPublicBranches.length <= 1) {
+                                        alert("Cần chọn ít nhất một chi nhánh khi đặt phạm vi theo chi nhánh.");
+                                        return;
+                                    }
+                                    popupPublicBranches = popupPublicBranches.filter(id => id !== branch.id);
+                                } else {
+                                    popupPublicBranches.push(branch.id);
+                                }
+                                renderPublicBranchSelector();
+                                renderPermissions();
+                            };
+                        }
+                        
+                        const checkedAttr = isSelected ? 'checked' : '';
+                        const disabledAttr = isBranchInherited ? 'disabled' : '';
+                        
+                        item.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" ${checkedAttr} ${disabledAttr} style="pointer-events: none; width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">${branch.name}</span>
+                            </div>
+                        `;
+                        dropdown.appendChild(item);
+                    });
+                }
+            }
+        }
+
+        function togglePublicBranchDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('publicBranchDropdown');
+            dropdown.classList.toggle('show');
+        }
+
         // Quyền nhãn hiển thị tiếng Việt
         function getPermissionLabel(perm) {
             if (perm === 'VIEW') return 'Chỉ xem';
@@ -3797,6 +5016,25 @@
         }
 
         function updatePermissionLevel(index, newLevel) {
+            const perm = currentPermissions[index];
+            
+            // Chặn hạ quyền kế thừa: nếu parent cho EDIT, con không được đặt VIEW
+            if (perm.isInherited && newLevel === 'VIEW') {
+                const isInheriting = document.getElementById('inheritToggle').checked;
+                if (isInheriting) {
+                    const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                    const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : null;
+                    if (parentEff) {
+                        const parentPerm = parentEff.permissions.find(p => p.id === perm.id);
+                        if (parentPerm && parentPerm.permission === 'EDIT') {
+                            // Không cho hạ quyền, reset lại UI
+                            renderPermissions();
+                            return;
+                        }
+                    }
+                }
+            }
+            
             currentPermissions[index].permission = newLevel;
         }
 
@@ -3864,13 +5102,30 @@
             
             const selectedRole = document.getElementById('newPermissionSelect').value;
             
+            // Lấy quyền mẹ để validate quyền tối thiểu
+            const isInheriting = document.getElementById('inheritToggle').checked;
+            let parentEff = null;
+            if (isInheriting) {
+                const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : null;
+            }
+            
             selectedSubjectsForAdding.forEach(sub => {
                 if (!currentPermissions.some(p => p.id === sub.id)) {
+                    // Xác định quyền tối thiểu: nếu mẹ đã có subject này với EDIT, ép lên EDIT
+                    let effectiveRole = selectedRole;
+                    if (parentEff) {
+                        const parentPerm = parentEff.permissions.find(p => p.id === sub.id);
+                        if (parentPerm && parentPerm.permission === 'EDIT' && effectiveRole === 'VIEW') {
+                            effectiveRole = 'EDIT';
+                        }
+                    }
+                    
                     currentPermissions.push({
                         id: sub.id,
                         name: sub.name,
                         type: sub.type,
-                        permission: selectedRole,
+                        permission: effectiveRole,
                         isInherited: false,
                         sub: sub.sub,
                         avatarCode: sub.avatarCode
@@ -3894,9 +5149,197 @@
                 item.isInheriting = isInheriting;
                 
                 if (!isInheriting) {
+                    // Self-demotion check
+                    const author = item.author || 'Nguyễn Minh Đức';
+                    const isSelfCreator = author.includes('Đức') || author.includes('Quản trị');
+                    if (isSelfCreator) {
+                        if (popupScope === 'RESTRICTED') {
+                            const selfOverride = currentPermissions.find(p => p.name.includes('Đức') || p.name.includes('Quản trị'));
+                            if (!selfOverride) {
+                                // Completely removed self from list
+                                const proceed = confirm("Bạn sẽ mất quyền truy cập đối với thư mục / tệp này");
+                                if (!proceed) return;
+                            } else if (selfOverride.permission === 'VIEW') {
+                                // Demoted self to VIEW
+                                const wasEdit = checkCurrentUserHasEditPermission(activeTargetId, activeTargetType);
+                                if (wasEdit) {
+                                    const proceed = confirm("Bạn sẽ mất quyền chỉnh sửa cho thư mục / tệp này");
+                                    if (!proceed) return;
+                                }
+                            }
+                        } else if (popupScope === 'PRIVATE') {
+                            if (popupCreatorPermission === 'VIEW') {
+                                const wasEdit = checkCurrentUserHasEditPermission(activeTargetId, activeTargetType);
+                                if (wasEdit) {
+                                    const proceed = confirm("Bạn sẽ mất quyền chỉnh sửa cho thư mục / tệp này");
+                                    if (!proceed) return;
+                                }
+                            }
+                        } else if (popupScope === 'PUBLIC') {
+                            if (popupCreatorPermission === 'VIEW') {
+                                const wasEdit = checkCurrentUserHasEditPermission(activeTargetId, activeTargetType);
+                                if (wasEdit) {
+                                    const proceed = confirm("Bạn sẽ mất quyền chỉnh sửa cho thư mục / tệp này");
+                                    if (!proceed) return;
+                                }
+                            }
+                        }
+                    }
+
                     item.permissionScope = popupScope;
                     item.publicRole = popupPublicRole;
+                    item.publicRange = popupPublicRange;
+                    item.publicBranches = JSON.parse(JSON.stringify(popupPublicBranches));
+                    item.creatorPermission = popupCreatorPermission;
                     item.permissions = JSON.parse(JSON.stringify(currentPermissions));
+                } else {
+                    // isInheriting is true
+                    const useCustom = document.getElementById('customPermsToggle').checked;
+                    item.useCustomPermissions = useCustom;
+
+                    if (!useCustom) {
+                        delete item.permissionScope;
+                        delete item.publicRole;
+                        delete item.publicRange;
+                        delete item.publicBranches;
+                        delete item.creatorPermission;
+                        delete item.permissions;
+                    } else {
+                        const parentFolderId = getParentFolderId(activeTargetId, activeTargetType);
+                        const parentEff = parentFolderId ? getEffectivePermissions(parentFolderId, 'folder') : {
+                            permissionScope: 'RESTRICTED',
+                            publicRole: 'VIEW',
+                            publicRange: 'ORG',
+                            publicBranches: [],
+                            creatorPermission: 'EDIT',
+                            permissions: []
+                        };
+
+                        // ===== SAFETY NET: Ép nâng quyền nếu con thấp hơn mẹ =====
+                        const scopeLevel = { 'PRIVATE': 0, 'RESTRICTED': 1, 'PUBLIC': 2 };
+                        
+                        // 1. Scope: con không được thấp hơn mẹ
+                        if (scopeLevel[popupScope] < scopeLevel[parentEff.permissionScope]) {
+                            popupScope = parentEff.permissionScope;
+                        }
+                        
+                        // 2. PublicRole: nếu cả hai PUBLIC, con không được thấp hơn mẹ
+                        if (popupScope === 'PUBLIC' && parentEff.permissionScope === 'PUBLIC') {
+                            if (parentEff.publicRole === 'EDIT' && popupPublicRole === 'VIEW') {
+                                popupPublicRole = 'EDIT';
+                            }
+                        }
+                        
+                        // 3. CreatorPermission: không được thấp hơn mẹ
+                        if (parentEff.creatorPermission === 'EDIT' && popupCreatorPermission === 'VIEW') {
+                            popupCreatorPermission = 'EDIT';
+                        }
+                        
+                        // 4. Individual permissions: ép nâng nếu parent EDIT mà con VIEW
+                        currentPermissions.forEach(perm => {
+                            if (perm.isInherited) {
+                                const parentPerm = parentEff.permissions.find(p => p.id === perm.id);
+                                if (parentPerm && parentPerm.permission === 'EDIT' && perm.permission === 'VIEW') {
+                                    perm.permission = 'EDIT';
+                                }
+                            }
+                        });
+                        // ===== END SAFETY NET =====
+
+                        // Scope override
+                        if (popupScope !== parentEff.permissionScope) {
+                            item.permissionScope = popupScope;
+                        } else {
+                            delete item.permissionScope;
+                        }
+
+                        // Public Role override
+                        if (popupScope === 'PUBLIC' && parentEff.permissionScope === 'PUBLIC') {
+                            if (popupPublicRole !== parentEff.publicRole) {
+                                item.publicRole = popupPublicRole;
+                            } else {
+                                delete item.publicRole;
+                            }
+                        } else if (popupScope === 'PUBLIC') {
+                            item.publicRole = popupPublicRole;
+                        } else {
+                            delete item.publicRole;
+                        }
+
+                        // Public Range override
+                        if (popupScope === 'PUBLIC' && parentEff.permissionScope === 'PUBLIC') {
+                            if (popupPublicRange !== parentEff.publicRange) {
+                                item.publicRange = popupPublicRange;
+                            } else {
+                                delete item.publicRange;
+                            }
+                        } else if (popupScope === 'PUBLIC') {
+                            item.publicRange = popupPublicRange;
+                        } else {
+                            delete item.publicRange;
+                        }
+
+                        // Public Branches override
+                        if (popupScope === 'PUBLIC' && popupPublicRange === 'BRANCH') {
+                            const parentBranches = parentEff.publicBranches || [];
+                            item.publicBranches = popupPublicBranches.filter(b => !parentBranches.includes(b));
+                        } else {
+                            delete item.publicBranches;
+                        }
+
+                        // Creator Permission override
+                        if (popupCreatorPermission !== parentEff.creatorPermission) {
+                            item.creatorPermission = popupCreatorPermission;
+                        } else {
+                            delete item.creatorPermission;
+                        }
+
+                        // Permissions override
+                        const childOverrides = [];
+                        currentPermissions.forEach(perm => {
+                            if (!perm.isInherited) {
+                                childOverrides.push({
+                                    id: perm.id,
+                                    name: perm.name,
+                                    type: perm.type,
+                                    permission: perm.permission,
+                                    avatarCode: perm.avatarCode,
+                                    sub: perm.sub
+                                });
+                            } else {
+                                let parentLevel = 'VIEW';
+                                const parentPerm = parentEff.permissions.find(p => p.id === perm.id);
+                                if (parentPerm) {
+                                    parentLevel = parentPerm.permission;
+                                } else {
+                                    // Check if it's an inherited public branch or org from parent
+                                    if (perm.id === 'public-org-inherited') {
+                                        parentLevel = parentEff.publicRole || 'VIEW';
+                                    } else if (perm.type === 'BRANCH') {
+                                        const parentAuthor = parentEff.author || 'Nguyễn Minh Đức';
+                                        const parentBranches = parentEff.publicBranches && parentEff.publicBranches.length > 0 
+                                            ? parentEff.publicBranches 
+                                            : [getAuthorBranch(parentAuthor).id];
+                                        if (parentBranches.includes(perm.id)) {
+                                            parentLevel = parentEff.publicRole || 'VIEW';
+                                        }
+                                    }
+                                }
+
+                                if (perm.permission === 'EDIT' && parentLevel === 'VIEW') {
+                                    childOverrides.push({
+                                        id: perm.id,
+                                        name: perm.name,
+                                        type: perm.type,
+                                        permission: 'EDIT',
+                                        avatarCode: perm.avatarCode,
+                                        sub: perm.sub
+                                    });
+                                }
+                            }
+                        });
+                        item.permissions = childOverrides;
+                    }
                 }
                 
                 if (activeTargetType === 'file') {
@@ -3912,8 +5355,8 @@
             if (isInheritedNow) {
                 actionDesc = "Cấu hình kế thừa quyền";
             } else {
-                if (popupScope === 'PRIVATE') actionDesc = "Đặt cấu hình Riêng tư";
-                else if (popupScope === 'PUBLIC') actionDesc = `Đặt cấu hình Công khai (${popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa'})`;
+                if (popupScope === 'PRIVATE') actionDesc = `Đặt cấu hình Riêng tư (Creator: ${popupCreatorPermission === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa'})`;
+                else if (popupScope === 'PUBLIC') actionDesc = `Đặt cấu hình Công khai (${popupPublicRange === 'BRANCH' ? 'Chi nhánh' : 'Đơn vị'} - ${popupPublicRole === 'VIEW' ? 'Chỉ xem' : 'Chỉnh sửa'})`;
                 else actionDesc = "Cấu hình Giới hạn thành viên";
             }
             
@@ -3935,6 +5378,15 @@
             const container = document.querySelector('.search-wrapper');
             if (container && !container.contains(e.target)) {
                 document.getElementById('searchDropdown').classList.remove('show');
+            }
+
+            // Đóng publicBranchDropdown khi click ngoài
+            const branchWrapper = document.getElementById('addPublicBranchWrapper');
+            if (branchWrapper && !branchWrapper.contains(e.target)) {
+                const branchDropdown = document.getElementById('publicBranchDropdown');
+                if (branchDropdown) {
+                    branchDropdown.classList.remove('show');
+                }
             }
 
             // Đóng các path-picker khi click ngoài
