@@ -273,13 +273,35 @@
     }
 
     const MOCK_PRODUCTS = [
-      { id: "SP001", name: "iPhone 15 Pro Max 256GB", code: "SP-001", group: "Điện thoại & Máy tính bảng", stock: 12, price: 29990000 },
+      { 
+        id: "SP001", 
+        name: "iPhone 15 Pro Max 256GB", 
+        code: "SP-001", 
+        group: "Điện thoại & Máy tính bảng", 
+        price: 29990000,
+        children: [
+          { id: "SP001_1", name: "iPhone 15 Pro Max 256GB Xanh", code: "SP-001-BLU", group: "Điện thoại & Máy tính bảng", stock: 12, price: 29990000 },
+          { id: "SP001_2", name: "iPhone 15 Pro Max 256GB Đen", code: "SP-001-BLK", group: "Điện thoại & Máy tính bảng", stock: 7, price: 29990000 },
+          { id: "SP001_3", name: "iPhone 15 Pro Max 256GB Đỏ", code: "SP-001-RED", group: "Điện thoại & Máy tính bảng", stock: 0, price: 29990000 }
+        ]
+      },
       { id: "SP002", name: "iPad Air 5 M1 Wifi 64GB", code: "SP-002", group: "Điện thoại & Máy tính bảng", stock: 0, price: 14500000 },
       { id: "SP003", name: "Tai nghe AirPods Pro Gen 2", code: "SP-003", group: "Phụ kiện công nghệ", stock: 25, price: 5790000 },
       { id: "SP004", name: "Củ sạc nhanh Anker 20W Nano Pro", code: "SP-004", group: "Phụ kiện công nghệ", stock: 50, price: 350000 },
       { id: "SP005", name: "Bàn phím cơ Keychron K2 V2", code: "SP-005", group: "Phụ kiện công nghệ", stock: 8, price: 1850000 },
       { id: "SP006", name: "Chuột không dây Logitech MX Master 3S", code: "SP-006", group: "Phụ kiện công nghệ", stock: 0, price: 2490000 },
-      { id: "SP007", name: "Áo thun Polo Nam Slim Fit", code: "SP-007", group: "Thời trang nam/nữ", stock: 100, price: 250000 },
+      { 
+        id: "SP007", 
+        name: "Áo thun Polo Nam Slim Fit", 
+        code: "SP-007", 
+        group: "Thời trang nam/nữ", 
+        price: 250000,
+        children: [
+          { id: "SP007_1", name: "Áo thun Polo Nam Slim Fit Trắng", code: "SP-007-WHT", group: "Thời trang nam/nữ", stock: 100, price: 250000 },
+          { id: "SP007_2", name: "Áo thun Polo Nam Slim Fit Đen", code: "SP-007-BLK", group: "Thời trang nam/nữ", stock: 45, price: 250000 },
+          { id: "SP007_3", name: "Áo thun Polo Nam Slim Fit Xanh", code: "SP-007-BLU", group: "Thời trang nam/nữ", stock: 0, price: 250000 }
+        ]
+      },
       { id: "SP008", name: "Quần jean Denim Nữ dáng suông", code: "SP-008", group: "Thời trang nam/nữ", stock: 45, price: 380000 },
       { id: "SP009", name: "Nồi chiên không dầu Philips 4.1L", code: "SP-009", group: "Gia dụng & Đời sống", stock: 15, price: 2190000 },
       { id: "SP010", name: "Quạt cây Panasonic F-409K", code: "SP-010", group: "Gia dụng & Đời sống", stock: 0, price: 1990000 },
@@ -411,7 +433,8 @@
     function App() {
       const [isModalOpen, setIsModalOpen] = useState(true);
 
-      const [tempSelectedIds, setTempSelectedIds] = useState(["SP001", "SP002", "SP003"]);
+      // Store added sellable product IDs (children or products without children)
+      const [tempSelectedIds, setTempSelectedIds] = useState(["SP001_1", "SP001_2", "SP003"]);
       const [modalQuery, setModalQuery] = useState("");
       
       // Multi-select state for groups
@@ -419,8 +442,6 @@
       
       // Stock status filter state
       const [stockFilter, setStockFilter] = useState("all"); // "all" | "in_stock" | "out_of_stock"
-      
-
 
       // Tabs: "all", "added", "not_added"
       const [modalSubTab, setModalSubTab] = useState("all");
@@ -433,12 +454,44 @@
         setTimeout(() => setToastMsg(""), 3000);
       };
 
-      const handleToggleCheckbox = (productId) => {
-        if (modalCheckboxIds.includes(productId)) {
-          setModalCheckboxIds(modalCheckboxIds.filter(id => id !== productId));
+      // Toggle checkbox: parent checks all children, children toggle independently
+      const handleToggleCheckbox = (prodId, parentProd = null) => {
+        let newChecked = [...modalCheckboxIds];
+        if (parentProd) {
+          // Toggle child product
+          const childId = prodId;
+          const isChecked = newChecked.includes(childId);
+          if (isChecked) {
+            newChecked = newChecked.filter(id => id !== childId);
+          } else {
+            newChecked.push(childId);
+          }
         } else {
-          setModalCheckboxIds([...modalCheckboxIds, productId]);
+          // Toggle parent product or standard product
+          const prod = MOCK_PRODUCTS.find(p => p.id === prodId);
+          if (prod && prod.children && prod.children.length > 0) {
+            const childIds = prod.children.map(c => c.id);
+            const allChildrenChecked = childIds.every(id => newChecked.includes(id));
+            if (allChildrenChecked) {
+              newChecked = newChecked.filter(id => !childIds.includes(id));
+            } else {
+              childIds.forEach(id => {
+                if (!newChecked.includes(id)) {
+                  newChecked.push(id);
+                }
+              });
+            }
+          } else {
+            // Standard product
+            const isChecked = newChecked.includes(prodId);
+            if (isChecked) {
+              newChecked = newChecked.filter(id => id !== prodId);
+            } else {
+              newChecked.push(prodId);
+            }
+          }
         }
+        setModalCheckboxIds(newChecked);
       };
 
       const handleAddSingle = (productId) => {
@@ -480,51 +533,96 @@
         showToast(`Đã xóa ${toRemove.length} sản phẩm thành công!`);
       };
 
+      // Hierarchical filter logic
       const filteredProducts = useMemo(() => {
-        return MOCK_PRODUCTS.filter(p => {
-          // Tab Filtering
-          const isAdded = tempSelectedIds.includes(p.id);
-          let matchesTab = true;
-          if (modalSubTab === "added") matchesTab = isAdded;
-          else if (modalSubTab === "not_added") matchesTab = !isAdded;
-
-          // Search Query
-          const matchesQuery = p.name.toLowerCase().includes(modalQuery.toLowerCase()) || 
-                               p.code.toLowerCase().includes(modalQuery.toLowerCase());
-          
-          // Multi-Group selection filter
+        return MOCK_PRODUCTS.map(p => {
           const matchesGroup = selectedGroups.length === 0 || selectedGroups.includes(p.group);
           
-          // Stock Status filter
-          let matchesStock = true;
-          if (stockFilter === "in_stock") matchesStock = p.stock > 0;
-          else if (stockFilter === "out_of_stock") matchesStock = p.stock === 0;
+          if (p.children && p.children.length > 0) {
+            // Filter children
+            const filteredChildren = p.children.filter(c => {
+              const isAdded = tempSelectedIds.includes(c.id);
+              let matchesTab = true;
+              if (modalSubTab === "added") matchesTab = isAdded;
+              else if (modalSubTab === "not_added") matchesTab = !isAdded;
 
-          return matchesTab && matchesQuery && matchesGroup && matchesStock;
-        });
+              const matchesSearch = modalQuery === "" || 
+                                    c.name.toLowerCase().includes(modalQuery.toLowerCase()) || 
+                                    c.code.toLowerCase().includes(modalQuery.toLowerCase()) ||
+                                    p.name.toLowerCase().includes(modalQuery.toLowerCase()) ||
+                                    p.code.toLowerCase().includes(modalQuery.toLowerCase());
+
+              let matchesStock = true;
+              if (stockFilter === "in_stock") matchesStock = c.stock > 0;
+              else if (stockFilter === "out_of_stock") matchesStock = c.stock === 0;
+
+              return matchesTab && matchesSearch && matchesStock && matchesGroup;
+            });
+
+            return filteredChildren.length > 0 ? { ...p, children: filteredChildren } : null;
+          } else {
+            // Standard product
+            const isAdded = tempSelectedIds.includes(p.id);
+            let matchesTab = true;
+            if (modalSubTab === "added") matchesTab = isAdded;
+            else if (modalSubTab === "not_added") matchesTab = !isAdded;
+
+            const matchesSearch = modalQuery === "" || 
+                                  p.name.toLowerCase().includes(modalQuery.toLowerCase()) || 
+                                  p.code.toLowerCase().includes(modalQuery.toLowerCase());
+
+            let matchesStock = true;
+            if (stockFilter === "in_stock") matchesStock = p.stock > 0;
+            else if (stockFilter === "out_of_stock") matchesStock = p.stock === 0;
+
+            return (matchesTab && matchesSearch && matchesStock && matchesGroup) ? p : null;
+          }
+        }).filter(Boolean);
       }, [modalQuery, selectedGroups, stockFilter, modalSubTab, tempSelectedIds]);
 
+      // Calculate total sellable products dynamically
+      const totalSellableCount = useMemo(() => {
+        let count = 0;
+        MOCK_PRODUCTS.forEach(p => {
+          if (p.children && p.children.length > 0) {
+            count += p.children.length;
+          } else {
+            count += 1;
+          }
+        });
+        return count;
+      }, []);
+
+      // Calculate added sellable products dynamically
+      const totalAddedCount = useMemo(() => {
+        return tempSelectedIds.length;
+      }, [tempSelectedIds]);
+
+      // Flat list of currently filtered sellable products
+      const visibleSellableProducts = useMemo(() => {
+        const list = [];
+        filteredProducts.forEach(p => {
+          if (p.children && p.children.length > 0) {
+            p.children.forEach(c => list.push(c));
+          } else {
+            list.push(p);
+          }
+        });
+        return list;
+      }, [filteredProducts]);
+
       const isAllFilteredChecked = useMemo(() => {
-        if (filteredProducts.length === 0) return false;
-        return filteredProducts.every(p => modalCheckboxIds.includes(p.id));
-      }, [filteredProducts, modalCheckboxIds]);
-
-      // Memoized checked items classifications
-      const checkedAdded = useMemo(() => {
-        return modalCheckboxIds.filter(id => tempSelectedIds.includes(id));
-      }, [modalCheckboxIds, tempSelectedIds]);
-
-      const checkedNotAdded = useMemo(() => {
-        return modalCheckboxIds.filter(id => !tempSelectedIds.includes(id));
-      }, [modalCheckboxIds, tempSelectedIds]);
+        if (visibleSellableProducts.length === 0) return false;
+        return visibleSellableProducts.every(p => modalCheckboxIds.includes(p.id));
+      }, [visibleSellableProducts, modalCheckboxIds]);
 
       const handleToggleAllFiltered = () => {
-        const filteredIds = filteredProducts.map(p => p.id);
+        const visibleIds = visibleSellableProducts.map(p => p.id);
         if (isAllFilteredChecked) {
-          setModalCheckboxIds(modalCheckboxIds.filter(id => !filteredIds.includes(id)));
+          setModalCheckboxIds(modalCheckboxIds.filter(id => !visibleIds.includes(id)));
         } else {
           const newChecked = [...modalCheckboxIds];
-          filteredIds.forEach(id => {
+          visibleIds.forEach(id => {
             if (!newChecked.includes(id)) {
               newChecked.push(id);
             }
@@ -533,10 +631,14 @@
         }
       };
 
-      const handleSaveProducts = () => {
-        setIsModalOpen(false);
-        showToast(`Xác nhận danh sách sản phẩm thành công!`);
-      };
+      // Memoized checked items classifications (only sellable products)
+      const checkedAdded = useMemo(() => {
+        return modalCheckboxIds.filter(id => tempSelectedIds.includes(id));
+      }, [modalCheckboxIds, tempSelectedIds]);
+
+      const checkedNotAdded = useMemo(() => {
+        return modalCheckboxIds.filter(id => !tempSelectedIds.includes(id));
+      }, [modalCheckboxIds, tempSelectedIds]);
 
       const handleClearFilters = () => {
         setModalQuery("");
@@ -592,9 +694,9 @@
                   maxWidth: "450px" 
                 }}>
                   {[
-                    { id: "all", label: "Tất cả", count: MOCK_PRODUCTS.length },
-                    { id: "added", label: "Đã thêm", count: tempSelectedIds.length, icon: "circle-check-fill" },
-                    { id: "not_added", label: "Chưa thêm", count: MOCK_PRODUCTS.length - tempSelectedIds.length, icon: "plus-circle-fill" }
+                    { id: "all", label: "Tất cả", count: totalSellableCount },
+                    { id: "added", label: "Đã thêm", count: totalAddedCount, icon: "circle-check-fill" },
+                    { id: "not_added", label: "Chưa thêm", count: totalSellableCount - totalAddedCount, icon: "plus-circle-fill" }
                   ].map(tab => {
                     const active = modalSubTab === tab.id;
                     return (
@@ -640,7 +742,7 @@
                   gap: "16px", 
                   alignItems: "flex-end" 
                 }}>
-                  {/* Search Query Filter (First position on the left) */}
+                  {/* Search Query Filter */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     <label style={{ fontSize: "11px", fontWeight: "700", color: "var(--fg-secondary)", letterSpacing: "0.5px" }}>TÌM KIẾM SẢN PHẨM</label>
                     <Field
@@ -716,7 +818,7 @@
               {/* Selection Summary & Bulk Action */}
               <div style={{ marginBottom: "12px", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center", height: "36px" }}>
                 <span style={{ color: "var(--fg-secondary)" }}>
-                  Đang hiển thị: <b>{filteredProducts.length}</b> sản phẩm
+                  Đang hiển thị: <b>{visibleSellableProducts.length}</b> sản phẩm
                 </span>
                 
                 {modalCheckboxIds.length > 0 ? (
@@ -725,7 +827,7 @@
                       Đã tích chọn <b>{modalCheckboxIds.length}</b> sản phẩm
                     </span>
                     
-                    {/* Add button: show only if there are checked items that are NOT yet added */}
+                    {/* Add button */}
                     {checkedNotAdded.length > 0 && (
                       <div className={checkedAdded.length > 0 ? "stip" : ""}>
                         <button 
@@ -744,7 +846,7 @@
                       </div>
                     )}
 
-                    {/* Remove button: show only if there are checked items that are ALREADY added */}
+                    {/* Remove button */}
                     {checkedAdded.length > 0 && (
                       <div className={checkedNotAdded.length > 0 ? "stip" : ""}>
                         <button 
@@ -791,59 +893,163 @@
                   </thead>
                   <tbody>
                     {filteredProducts.map((prod, index) => {
-                      const isChecked = modalCheckboxIds.includes(prod.id);
-                      const isAdded = tempSelectedIds.includes(prod.id);
-                      return (
-                        <tr 
-                          key={prod.id} 
-                          style={{ 
-                            cursor: "pointer", 
-                            background: isChecked ? "var(--surface-pink)" : (isAdded ? "#FFF3F9" : "transparent") 
-                          }}
-                          onClick={() => handleToggleCheckbox(prod.id)}
-                        >
-                          <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
-                            <Checkbox 
-                              checked={isChecked} 
-                              onChange={() => handleToggleCheckbox(prod.id)}
-                            />
-                          </td>
-                          <td style={{ textAlign: "center", color: "var(--fg-secondary)" }}>{index + 1}</td>
-                          <td style={{ display: "flex", justifyContent: "center" }}>
-                            <div className="sprod-thumb">
-                              <i className="ph ph-package" />
-                            </div>
-                          </td>
-                          <td className="t-mono">{prod.code}</td>
-                          <td>
-                            <b style={{ color: "var(--fg-base)" }}>{prod.name}</b>
-                          </td>
-                          <td>
-                            <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{prod.group}</span>
-                          </td>
-                          <td style={{ textAlign: "right", paddingRight: "16px" }} onClick={(e) => e.stopPropagation()}>
-                            {!isAdded ? (
-                              <button 
-                                type="button" 
-                                className="sbtn sbtn--ghost" 
-                                style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-green)" }}
-                                onClick={() => handleAddSingle(prod.id)}
-                              >
-                                <i className="ph ph-plus" style={{ marginRight: "4px" }} />Thêm
-                              </button>
-                            ) : (
-                              <button 
-                                type="button" 
-                                className="sbtn sbtn--ghost" 
-                                style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-red)" }}
-                                onClick={() => handleRemoveSingle(prod.id)}
-                              >
-                                <i className="ph ph-trash" style={{ marginRight: "4px" }} />Xóa
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
+                      const hasChildren = prod.children && prod.children.length > 0;
+                      
+                      if (hasChildren) {
+                        const isParentChecked = prod.children.every(c => modalCheckboxIds.includes(c.id));
+                        const isParentAdded = prod.children.every(c => tempSelectedIds.includes(c.id));
+                        
+                        return (
+                          <React.Fragment key={prod.id}>
+                            {/* Parent Product Row (Container header only) */}
+                            <tr 
+                              style={{ 
+                                cursor: "pointer", 
+                                background: isParentChecked ? "var(--surface-pink)" : (isParentAdded ? "#FFF3F9" : "#fdfdfd"),
+                                borderLeft: "4px solid var(--stroke-medium)" 
+                              }}
+                              onClick={() => handleToggleCheckbox(prod.id)}
+                            >
+                              <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+                                <Checkbox 
+                                  checked={isParentChecked} 
+                                  onChange={() => handleToggleCheckbox(prod.id)}
+                                />
+                              </td>
+                              <td style={{ textAlign: "center", color: "var(--fg-secondary)", fontWeight: "bold" }}>{index + 1}</td>
+                              <td style={{ display: "flex", justifyContent: "center" }}>
+                                <div className="sprod-thumb" style={{ background: "var(--surface-highlight)" }}>
+                                  <i className="ph ph-folders" />
+                                </div>
+                              </td>
+                              <td className="t-mono" style={{ fontWeight: "600" }}>{prod.code}</td>
+                              <td>
+                                <b style={{ color: "var(--fg-base)" }}>{prod.name}</b>
+                                <span className="status status--grey" style={{ marginLeft: "8px", fontSize: "11px" }}>Nhóm</span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: "12px", color: "var(--fg-secondary)", fontWeight: "500" }}>{prod.group}</span>
+                              </td>
+                              <td style={{ textAlign: "right", paddingRight: "16px", color: "var(--fg-secondary)", fontSize: "12px", fontStyle: "italic" }} onClick={(e) => e.stopPropagation()}>
+                                <span className="status status--grey" style={{ fontWeight: "600" }}>Chọn thuộc tính</span>
+                              </td>
+                            </tr>
+                            
+                            {/* Children Products Rows (Selectable & Sellable) */}
+                            {prod.children.map((child, childIdx) => {
+                              const isChildChecked = modalCheckboxIds.includes(child.id);
+                              const isChildAdded = tempSelectedIds.includes(child.id);
+                              return (
+                                <tr 
+                                  key={child.id}
+                                  style={{ 
+                                    cursor: "pointer", 
+                                    background: isChildChecked ? "var(--surface-pink)" : (isChildAdded ? "#FFF3F9" : "transparent") 
+                                  }}
+                                  onClick={() => handleToggleCheckbox(child.id, prod)}
+                                >
+                                  <td style={{ textAlign: "center", paddingLeft: "24px" }} onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox 
+                                      checked={isChildChecked} 
+                                      onChange={() => handleToggleCheckbox(child.id, prod)}
+                                    />
+                                  </td>
+                                  <td style={{ textAlign: "center", color: "var(--fg-secondary)", fontSize: "11px" }}>{index + 1}.{childIdx + 1}</td>
+                                  <td style={{ display: "flex", justifyContent: "center" }}>
+                                    <div className="sprod-thumb" style={{ width: "24px", height: "24px" }}>
+                                      <i className="ph ph-package" style={{ fontSize: "14px" }} />
+                                    </div>
+                                  </td>
+                                  <td className="t-mono" style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{child.code}</td>
+                                  <td style={{ paddingLeft: "24px" }}>
+                                    <span style={{ color: "var(--fg-secondary)", marginRight: "4px" }}>↳</span>
+                                    <span style={{ color: "var(--fg-base)" }}>{child.name}</span>
+                                  </td>
+                                  <td>
+                                    <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{prod.group}</span>
+                                  </td>
+                                  <td style={{ textAlign: "right", paddingRight: "16px" }} onClick={(e) => e.stopPropagation()}>
+                                    {!isChildAdded ? (
+                                      <button 
+                                        type="button" 
+                                        className="sbtn sbtn--ghost" 
+                                        style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-green)" }}
+                                        onClick={() => handleAddSingle(child.id)}
+                                      >
+                                        <i className="ph ph-plus" style={{ marginRight: "4px" }} />Thêm
+                                      </button>
+                                    ) : (
+                                      <button 
+                                        type="button" 
+                                        className="sbtn sbtn--ghost" 
+                                        style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-red)" }}
+                                        onClick={() => handleRemoveSingle(child.id)}
+                                      >
+                                        <i className="ph ph-trash" style={{ marginRight: "4px" }} />Xóa
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
+                        );
+                      } else {
+                        // Standard Product without children (Sellable)
+                        const isChecked = modalCheckboxIds.includes(prod.id);
+                        const isAdded = tempSelectedIds.includes(prod.id);
+                        return (
+                          <tr 
+                            key={prod.id} 
+                            style={{ 
+                              cursor: "pointer", 
+                              background: isChecked ? "var(--surface-pink)" : (isAdded ? "#FFF3F9" : "transparent") 
+                            }}
+                            onClick={() => handleToggleCheckbox(prod.id)}
+                          >
+                            <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+                              <Checkbox 
+                                checked={isChecked} 
+                                onChange={() => handleToggleCheckbox(prod.id)}
+                              />
+                            </td>
+                            <td style={{ textAlign: "center", color: "var(--fg-secondary)" }}>{index + 1}</td>
+                            <td style={{ display: "flex", justifyContent: "center" }}>
+                              <div className="sprod-thumb">
+                                <i className="ph ph-package" />
+                              </div>
+                            </td>
+                            <td className="t-mono">{prod.code}</td>
+                            <td>
+                              <b style={{ color: "var(--fg-base)" }}>{prod.name}</b>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{prod.group}</span>
+                            </td>
+                            <td style={{ textAlign: "right", paddingRight: "16px" }} onClick={(e) => e.stopPropagation()}>
+                              {!isAdded ? (
+                                <button 
+                                  type="button" 
+                                  className="sbtn sbtn--ghost" 
+                                  style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-green)" }}
+                                  onClick={() => handleAddSingle(prod.id)}
+                                >
+                                  <i className="ph ph-plus" style={{ marginRight: "4px" }} />Thêm
+                                </button>
+                              ) : (
+                                <button 
+                                  type="button" 
+                                  className="sbtn sbtn--ghost" 
+                                  style={{ height: "30px", padding: "0 10px", fontSize: "12px", color: "var(--color-red)" }}
+                                  onClick={() => handleRemoveSingle(prod.id)}
+                                >
+                                  <i className="ph ph-trash" style={{ marginRight: "4px" }} />Xóa
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      }
                     })}
                     {filteredProducts.length === 0 && (
                       <tr>
