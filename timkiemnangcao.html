@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=1440, initial-scale=1" />
   <title>Tìm kiếm nâng cao - Thay đổi sản phẩm</title>
   
-  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/style.css" />
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
@@ -222,6 +222,69 @@
   </style>
 </head>
 <body>
+  <!-- Global Error Logger Script to prevent silent blank pages -->
+  <script>
+    window.addEventListener('error', function(e) {
+      const errorDiv = document.getElementById('debug-err-panel') || document.createElement('div');
+      errorDiv.id = 'debug-err-panel';
+      errorDiv.style.position = 'fixed';
+      errorDiv.style.top = '0';
+      errorDiv.style.left = '0';
+      errorDiv.style.width = '100%';
+      errorDiv.style.height = '100%';
+      errorDiv.style.backgroundColor = '#fff';
+      errorDiv.style.color = '#ff0000';
+      errorDiv.style.padding = '20px';
+      errorDiv.style.zIndex = '999999';
+      errorDiv.style.fontFamily = 'monospace';
+      errorDiv.style.fontSize = '14px';
+      errorDiv.style.overflow = 'auto';
+      errorDiv.innerHTML = '<h2>[Debug Console] Đã xảy ra lỗi runtime:</h2>' +
+                           '<p><b>Message:</b> ' + e.message + '</p>' +
+                           '<p><b>File:</b> ' + e.filename + ':' + e.lineno + ':' + e.colno + '</p>' +
+                           '<pre style="background:#f5f5f5; padding:12px; border-radius:4px;">' + (e.error ? e.error.stack : '') + '</pre>' +
+                           '<p style="color:#666">Vui lòng gửi lại ảnh chụp hoặc copy lỗi này để AI sửa giúp bạn.</p>';
+      if (!document.getElementById('debug-err-panel')) {
+        document.body.appendChild(errorDiv);
+      }
+    });
+
+    (function() {
+      const oldError = console.error;
+      console.error = function() {
+        oldError.apply(console, arguments);
+        const msg = Array.from(arguments).map(arg => {
+          if (arg instanceof Error) return arg.stack;
+          if (typeof arg === 'object') return JSON.stringify(arg);
+          return String(arg);
+        }).join(' ');
+        
+        if (msg.includes('Error') || msg.includes('Babel') || msg.includes('React') || msg.includes('syntax')) {
+          const errorDiv = document.getElementById('debug-err-panel') || document.createElement('div');
+          errorDiv.id = 'debug-err-panel';
+          errorDiv.style.position = 'fixed';
+          errorDiv.style.top = '0';
+          errorDiv.style.left = '0';
+          errorDiv.style.width = '100%';
+          errorDiv.style.height = '100%';
+          errorDiv.style.backgroundColor = '#fff';
+          errorDiv.style.color = '#ff0000';
+          errorDiv.style.padding = '20px';
+          errorDiv.style.zIndex = '999999';
+          errorDiv.style.fontFamily = 'monospace';
+          errorDiv.style.fontSize = '14px';
+          errorDiv.style.overflow = 'auto';
+          errorDiv.innerHTML = '<h2>[Debug Console] Phát hiện lỗi Console Error:</h2>' +
+                               '<pre style="background:#f5f5f5; padding:12px; border-radius:4px; max-height:400px; overflow:auto;">' + msg + '</pre>' +
+                               '<p style="color:#666">Vui lòng gửi lại ảnh chụp hoặc copy lỗi này để AI sửa giúp bạn.</p>';
+          if (!document.getElementById('debug-err-panel')) {
+            document.body.appendChild(errorDiv);
+          }
+        }
+      };
+    })();
+  </script>
+
   <div id="app"></div>
 
   <script type="text/babel">
@@ -446,6 +509,7 @@
       // Tabs: "all", "added", "not_added"
       const [modalSubTab, setModalSubTab] = useState("all");
       const [modalCheckboxIds, setModalCheckboxIds] = useState([]);
+      const [collapsedParentIds, setCollapsedParentIds] = useState([]);
       
       const [toastMsg, setToastMsg] = useState("");
 
@@ -531,6 +595,11 @@
         setTempSelectedIds(tempSelectedIds.filter(id => !toRemove.includes(id)));
         setModalCheckboxIds([]);
         showToast(`Đã xóa ${toRemove.length} sản phẩm thành công!`);
+      };
+
+      const handleSaveProducts = () => {
+        setIsModalOpen(false);
+        showToast(`Đã xác nhận chọn ${tempSelectedIds.length} sản phẩm!`);
       };
 
       // Hierarchical filter logic
@@ -883,7 +952,7 @@
                           onChange={handleToggleAllFiltered}
                         />
                       </th>
-                      <th style={{ width: 50, textAlign: "center" }}>STT</th>
+                      <th style={{ width: 70, textAlign: "center" }}>STT</th>
                       <th style={{ width: 60, textAlign: "center" }}>Ảnh</th>
                       <th style={{ width: 90 }}>Mã SP</th>
                       <th>Tên sản phẩm</th>
@@ -894,6 +963,7 @@
                   <tbody>
                     {filteredProducts.map((prod, index) => {
                       const hasChildren = prod.children && prod.children.length > 0;
+                      const isCollapsed = collapsedParentIds.includes(prod.id);
                       
                       if (hasChildren) {
                         const isParentChecked = prod.children.every(c => modalCheckboxIds.includes(c.id));
@@ -905,8 +975,8 @@
                             <tr 
                               style={{ 
                                 cursor: "pointer", 
-                                background: isParentChecked ? "var(--surface-pink)" : (isParentAdded ? "#FFF3F9" : "#fdfdfd"),
-                                borderLeft: "4px solid var(--stroke-medium)" 
+                                background: isParentChecked ? "var(--surface-pink)" : (isParentAdded ? "#FFF3F9" : "#f4f6f9"),
+                                borderLeft: "4px solid var(--brand-pink)" 
                               }}
                               onClick={() => handleToggleCheckbox(prod.id)}
                             >
@@ -916,54 +986,102 @@
                                   onChange={() => handleToggleCheckbox(prod.id)}
                                 />
                               </td>
-                              <td style={{ textAlign: "center", color: "var(--fg-secondary)", fontWeight: "bold" }}>{index + 1}</td>
+                              <td style={{ textAlign: "center", position: "relative" }}>
+                                {!isCollapsed && (
+                                  <div style={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    bottom: 0,
+                                    left: "22px",
+                                    borderLeft: "1px dashed #d1d5db",
+                                    zIndex: 1
+                                  }} />
+                                )}
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", position: "relative", zIndex: 2 }}>
+                                  <span 
+                                    style={{ cursor: "pointer", color: "var(--fg-secondary)", display: "inline-flex", alignItems: "center", width: "16px", justifyContent: "center" }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (collapsedParentIds.includes(prod.id)) {
+                                        setCollapsedParentIds(collapsedParentIds.filter(id => id !== prod.id));
+                                      } else {
+                                        setCollapsedParentIds([...collapsedParentIds, prod.id]);
+                                      }
+                                    }}
+                                  >
+                                    <i className={`ph ph-caret-${isCollapsed ? "right" : "down"}`} style={{ fontSize: "14px" }} />
+                                  </span>
+                                  <span style={{ fontWeight: "bold", minWidth: "12px", textAlign: "left" }}>{index + 1}</span>
+                                </div>
+                              </td>
                               <td style={{ display: "flex", justifyContent: "center" }}>
-                                <div className="sprod-thumb" style={{ background: "var(--surface-highlight)" }}>
+                                <div className="sprod-thumb" style={{ background: "#e5e7eb", color: "var(--brand-pink)" }}>
                                   <i className="ph ph-folders" />
                                 </div>
                               </td>
-                              <td className="t-mono" style={{ fontWeight: "600" }}>{prod.code}</td>
+                              <td className="t-mono" style={{ fontWeight: "600", color: "var(--fg-base)" }}>{prod.code}</td>
                               <td>
-                                <b style={{ color: "var(--fg-base)" }}>{prod.name}</b>
-                                <span className="status status--grey" style={{ marginLeft: "8px", fontSize: "11px" }}>Nhóm</span>
+                                <b style={{ color: "var(--fg-base)", fontSize: "14px" }}>{prod.name}</b>
+                                <span className="status status--blue" style={{ marginLeft: "8px", fontSize: "11px", fontWeight: "bold" }}>Sản phẩm cha</span>
                               </td>
                               <td>
-                                <span style={{ fontSize: "12px", color: "var(--fg-secondary)", fontWeight: "500" }}>{prod.group}</span>
+                                <span style={{ fontSize: "12px", color: "var(--fg-secondary)", fontWeight: "600" }}>{prod.group}</span>
                               </td>
                               <td style={{ textAlign: "right", paddingRight: "16px", color: "var(--fg-secondary)", fontSize: "12px", fontStyle: "italic" }} onClick={(e) => e.stopPropagation()}>
-                                <span className="status status--grey" style={{ fontWeight: "600" }}>Chọn thuộc tính</span>
+                                <span className="status status--gray" style={{ fontWeight: "600" }}>Chọn thuộc tính</span>
                               </td>
                             </tr>
                             
                             {/* Children Products Rows (Selectable & Sellable) */}
-                            {prod.children.map((child, childIdx) => {
+                            {!isCollapsed && prod.children.map((child, childIdx) => {
                               const isChildChecked = modalCheckboxIds.includes(child.id);
                               const isChildAdded = tempSelectedIds.includes(child.id);
+                              const isLast = childIdx === prod.children.length - 1;
                               return (
                                 <tr 
                                   key={child.id}
                                   style={{ 
                                     cursor: "pointer", 
-                                    background: isChildChecked ? "var(--surface-pink)" : (isChildAdded ? "#FFF3F9" : "transparent") 
+                                    background: isChildChecked ? "var(--surface-pink)" : (isChildAdded ? "#FFF3F9" : "#fafbfc"),
+                                    borderLeft: "4px solid #d1d5db"
                                   }}
                                   onClick={() => handleToggleCheckbox(child.id, prod)}
                                 >
-                                  <td style={{ textAlign: "center", paddingLeft: "24px" }} onClick={(e) => e.stopPropagation()}>
+                                  <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
                                     <Checkbox 
                                       checked={isChildChecked} 
                                       onChange={() => handleToggleCheckbox(child.id, prod)}
                                     />
                                   </td>
-                                  <td style={{ textAlign: "center", color: "var(--fg-secondary)", fontSize: "11px" }}>{index + 1}.{childIdx + 1}</td>
+                                  <td style={{ textAlign: "center", position: "relative" }}>
+                                    <div style={{
+                                      position: "absolute",
+                                      top: 0,
+                                      bottom: isLast ? "50%" : 0,
+                                      left: "22px",
+                                      borderLeft: "1px dashed #d1d5db",
+                                      zIndex: 1
+                                    }} />
+                                    <div style={{
+                                      position: "absolute",
+                                      top: "50%",
+                                      left: "22px",
+                                      width: "6px",
+                                      borderTop: "1px dashed #d1d5db",
+                                      zIndex: 1
+                                    }} />
+                                    <span style={{ position: "relative", zIndex: 2, paddingLeft: "12px", color: "var(--fg-secondary)", fontSize: "11px" }}>
+                                      {index + 1}.{childIdx + 1}
+                                    </span>
+                                  </td>
                                   <td style={{ display: "flex", justifyContent: "center" }}>
                                     <div className="sprod-thumb" style={{ width: "24px", height: "24px" }}>
-                                      <i className="ph ph-package" style={{ fontSize: "14px" }} />
+                                      <i className="ph ph-package" style={{ fontSize: "14px", color: "var(--fg-secondary)" }} />
                                     </div>
                                   </td>
                                   <td className="t-mono" style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{child.code}</td>
-                                  <td style={{ paddingLeft: "24px" }}>
-                                    <span style={{ color: "var(--fg-secondary)", marginRight: "4px" }}>↳</span>
-                                    <span style={{ color: "var(--fg-base)" }}>{child.name}</span>
+                                  <td>
+                                    <span style={{ color: "var(--fg-base)", fontSize: "13px" }}>{child.name}</span>
                                   </td>
                                   <td>
                                     <span style={{ fontSize: "12px", color: "var(--fg-secondary)" }}>{prod.group}</span>
