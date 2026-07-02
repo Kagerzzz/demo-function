@@ -796,7 +796,10 @@
                       return (
                         <tr 
                           key={prod.id} 
-                          style={{ cursor: "pointer", background: isChecked ? "var(--surface-pink)" : "transparent" }}
+                          style={{ 
+                            cursor: "pointer", 
+                            background: isChecked ? "var(--surface-pink)" : (isAdded ? "#FFF3F9" : "transparent") 
+                          }}
                           onClick={() => handleToggleCheckbox(prod.id)}
                         >
                           <td style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
