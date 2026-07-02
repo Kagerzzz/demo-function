@@ -986,18 +986,25 @@
                                   onChange={() => handleToggleCheckbox(prod.id)}
                                 />
                               </td>
-                              <td style={{ textAlign: "center", position: "relative" }}>
+                              <td style={{ position: "relative", padding: 0 }}>
                                 {!isCollapsed && (
                                   <div style={{
                                     position: "absolute",
                                     top: "50%",
                                     bottom: 0,
-                                    left: "22px",
+                                    left: "24px",
                                     borderLeft: "1px dashed #d1d5db",
                                     zIndex: 1
                                   }} />
                                 )}
-                                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", position: "relative", zIndex: 2 }}>
+                                <div style={{ 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  paddingLeft: "16px", 
+                                  gap: "8px", 
+                                  position: "relative", 
+                                  zIndex: 2 
+                                }}>
                                   <span 
                                     style={{ cursor: "pointer", color: "var(--fg-secondary)", display: "inline-flex", alignItems: "center", width: "16px", justifyContent: "center" }}
                                     onClick={(e) => {
@@ -1011,7 +1018,7 @@
                                   >
                                     <i className={`ph ph-caret-${isCollapsed ? "right" : "down"}`} style={{ fontSize: "14px" }} />
                                   </span>
-                                  <span style={{ fontWeight: "bold", minWidth: "12px", textAlign: "left" }}>{index + 1}</span>
+                                  <span style={{ fontWeight: "bold", color: "var(--fg-base)" }}>{index + 1}</span>
                                 </div>
                               </td>
                               <td style={{ display: "flex", justifyContent: "center" }}>
@@ -1053,26 +1060,26 @@
                                       onChange={() => handleToggleCheckbox(child.id, prod)}
                                     />
                                   </td>
-                                  <td style={{ textAlign: "center", position: "relative" }}>
+                                  <td style={{ position: "relative", padding: 0 }}>
                                     <div style={{
                                       position: "absolute",
                                       top: 0,
                                       bottom: isLast ? "50%" : 0,
-                                      left: "22px",
+                                      left: "24px",
                                       borderLeft: "1px dashed #d1d5db",
                                       zIndex: 1
                                     }} />
-                                    <div style={{
-                                      position: "absolute",
-                                      top: "50%",
-                                      left: "22px",
-                                      width: "6px",
-                                      borderTop: "1px dashed #d1d5db",
-                                      zIndex: 1
-                                    }} />
-                                    <span style={{ position: "relative", zIndex: 2, paddingLeft: "12px", color: "var(--fg-secondary)", fontSize: "11px" }}>
-                                      {index + 1}.{childIdx + 1}
-                                    </span>
+                                    <div style={{ 
+                                      display: "flex", 
+                                      alignItems: "center", 
+                                      paddingLeft: "40px", 
+                                      position: "relative", 
+                                      zIndex: 2 
+                                    }}>
+                                      <span style={{ color: "var(--fg-secondary)", fontSize: "11px" }}>
+                                        {index + 1}.{childIdx + 1}
+                                      </span>
+                                    </div>
                                   </td>
                                   <td style={{ display: "flex", justifyContent: "center" }}>
                                     <div className="sprod-thumb" style={{ width: "24px", height: "24px" }}>
